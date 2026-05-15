@@ -84,7 +84,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     @Override
     public Response addUser(UserDto userDto, HttpHeaders headers) {
-        LOGGER.info("ADD USER INFO : "+userDto.toString());
+        LOGGER.info("ADD USER INFO : {} ", userDto);
         HttpEntity requestEntity = new HttpEntity(userDto, null);
         ResponseEntity<Response<User>> re = restTemplate.exchange(
                 USER_SERVICE_IP_URI + "/register",

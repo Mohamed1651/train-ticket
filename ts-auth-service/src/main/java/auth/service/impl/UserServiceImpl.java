@@ -96,7 +96,7 @@ public class UserServiceImpl implements UserService {
         }
 
         if (!infos.isEmpty()) {
-            LOGGER.warn(infos.toString());
+            LOGGER.warn("{}", infos);
             throw new UserOperationException(infos.toString());
         }
     }

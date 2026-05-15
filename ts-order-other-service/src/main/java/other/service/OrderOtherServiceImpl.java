@@ -408,7 +408,7 @@ public class OrderOtherServiceImpl implements OrderOtherService {
 
     @Override
     public Response updateOrder(Order order, HttpHeaders headers) {
-        LOGGER.info("UPDATE ORDER INFO :" + order);
+        LOGGER.info("UPDATE ORDER INFO : {}", order);
         Order oldOrder = orderOtherRepository.findById(order.getId());
         if (oldOrder == null) {
             OrderOtherServiceImpl.LOGGER.error("[Admin Update Order] Fail.Order not found, OrderId: {}",order.getId());

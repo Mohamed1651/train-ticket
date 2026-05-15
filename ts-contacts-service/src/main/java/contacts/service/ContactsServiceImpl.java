@@ -96,7 +96,7 @@ public class ContactsServiceImpl implements ContactsService {
     public Response modify(Contacts contacts, HttpHeaders headers) {
         headers = null;
         Response oldContactResponse = findContactsById(contacts.getId(), headers);
-        LOGGER.info(oldContactResponse.toString());
+        LOGGER.info("{}", oldContactResponse);
         Contacts oldContacts = (Contacts) oldContactResponse.getData();
         if (oldContacts == null) {
             ContactsServiceImpl.LOGGER.error("[Contacts-Modify-Service][ModifyContacts] Fail.Contacts not found, contactId: {}", contacts.getId());
