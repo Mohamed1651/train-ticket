@@ -123,7 +123,7 @@ public class VerifyCodeServiceImpl implements VerifyCodeService {
         }
 
         String code = cacheCode.getIfPresent(cookieId);
-        LOGGER.info("GET Code By cookieId " + cookieId + "   is :" + code);
+        LOGGER.info("GET Code By cookieId {}    is : {}", cookieId, code);
         if (code == null) {
             VerifyCodeServiceImpl.LOGGER.warn("Get image code warn.Code not found,CookieId: {}",cookieId);
             return false;

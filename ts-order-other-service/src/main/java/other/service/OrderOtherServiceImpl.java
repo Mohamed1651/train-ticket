@@ -49,7 +49,7 @@ public class OrderOtherServiceImpl implements OrderOtherService {
 
             LeftTicketInfo leftTicketInfo = new LeftTicketInfo();
             leftTicketInfo.setSoldTickets(ticketSet);
-            OrderOtherServiceImpl.LOGGER.info("Left ticket info is: {}", leftTicketInfo.toString());
+            OrderOtherServiceImpl.LOGGER.info("Left ticket info is: {}", leftTicketInfo);
 
             return new Response<>(1, success, leftTicketInfo);
         } else {
@@ -206,7 +206,7 @@ public class OrderOtherServiceImpl implements OrderOtherService {
                 requestEntity,
                 new ParameterizedTypeReference<Response<List<String>>>() {
                 });
-        OrderOtherServiceImpl.LOGGER.info("Stations name list is : {}", re.getBody().toString());
+        OrderOtherServiceImpl.LOGGER.info("Stations name list is : {}", re.getBody());
         return re.getBody().getData();
     }
 
@@ -408,13 +408,13 @@ public class OrderOtherServiceImpl implements OrderOtherService {
 
     @Override
     public Response updateOrder(Order order, HttpHeaders headers) {
-        LOGGER.info("UPDATE ORDER INFO :" + order.toString());
+        LOGGER.info("UPDATE ORDER INFO :" + order);
         Order oldOrder = orderOtherRepository.findById(order.getId());
         if (oldOrder == null) {
             OrderOtherServiceImpl.LOGGER.error("[Admin Update Order] Fail.Order not found, OrderId: {}",order.getId());
             return new Response<>(0, orderNotFound, null);
         } else {
-            OrderOtherServiceImpl.LOGGER.info("{}", oldOrder.toString());
+            OrderOtherServiceImpl.LOGGER.info("{}", oldOrder);
             oldOrder.setAccountId(order.getAccountId());
             oldOrder.setBoughtDate(order.getBoughtDate());
             oldOrder.setTravelDate(order.getTravelDate());

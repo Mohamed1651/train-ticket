@@ -28,7 +28,7 @@ public class ContactsServiceImpl implements ContactsService {
 
     @Override
     public Response findContactsById(UUID id, HttpHeaders headers) {
-        LOGGER.info("FIND CONTACTS BY ID: " + id);
+        LOGGER.info("FIND CONTACTS BY ID: {}", id);
         Contacts contacts = contactsRepository.findById(id);
         if (contacts != null) {
             return new Response<>(1, success, contacts);

@@ -101,7 +101,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
     public Response updateOrder(Order request, HttpHeaders headers) {
 
         Response updateOrderResult;
-        LOGGER.info("UPDATE ORDER INFO : " + request.toString());
+        LOGGER.info("UPDATE ORDER INFO : {}", request);
         if (request.getTrainNumber().startsWith("G") || request.getTrainNumber().startsWith("D")) {
 
             AdminOrderServiceImpl.LOGGER.info("[Update Order]");

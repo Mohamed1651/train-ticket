@@ -104,7 +104,7 @@ public class InsidePaymentServiceImpl implements InsidePaymentService {
                         Response.class);
                 Response outsidePaySuccess = reOutsidePaySuccess.getBody();
 
-                InsidePaymentServiceImpl.LOGGER.info("Out pay result: {}", outsidePaySuccess.toString());
+                InsidePaymentServiceImpl.LOGGER.info("Out pay result: {}", outsidePaySuccess);
                 if (outsidePaySuccess.getStatus() == 1) {
                     payment.setType(PaymentType.O);
                     paymentRepository.save(payment);

@@ -17,7 +17,7 @@ public class RabbitSend {
     private static final Logger logger = LoggerFactory.getLogger(RabbitSend.class);
 
     public void send(String val) {
-        logger.info("Send info to mq:" + val);
+        logger.info("Send info to mq:{}", val);
         this.rabbitTemplate.convertAndSend(Queues.queueName, val);
     }
 

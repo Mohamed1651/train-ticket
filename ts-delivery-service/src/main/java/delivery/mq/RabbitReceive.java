@@ -40,7 +40,7 @@ public class RabbitReceive {
             logger.error("Receive delivery object is null, error.");
             return;
         }
-        logger.info("Receive delivery object:" + delivery);
+        logger.info("Receive delivery object:{}", delivery);
 
         if (delivery.getId() == null) {
             delivery.setId(UUID.randomUUID());

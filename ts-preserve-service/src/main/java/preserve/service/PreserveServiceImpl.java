@@ -65,13 +65,13 @@ public class PreserveServiceImpl implements PreserveService {
         PreserveServiceImpl.LOGGER.info("[Step 3] TripId: {}", oti.getTripId());
         Response<TripAllDetail> response = getTripAllDetailInformation(gtdi, headers);
         TripAllDetail gtdr = response.getData();
-        LOGGER.info("TripAllDetail:" + gtdr.toString());
+        LOGGER.info("TripAllDetail: {}", gtdr);
         if (response.getStatus() == 0) {
             PreserveServiceImpl.LOGGER.error("[Search For Trip Detail Information] error, TripId: {}, message: {}", gtdi.getTripId(), response.getMsg());
             return new Response<>(0, response.getMsg(), null);
         } else {
             TripResponse tripResponse = gtdr.getTripResponse();
-            LOGGER.info("TripResponse:" + tripResponse.toString());
+            LOGGER.info("TripResponse:" + tripResponse);
             if (oti.getSeatType() == SeatClass.FIRSTCLASS.getCode()) {
                 if (tripResponse.getConfortClass() == 0) {
                     PreserveServiceImpl.LOGGER.warn("[Check seat is enough], TripId: {}",oti.getTripId());
@@ -208,7 +208,7 @@ public class PreserveServiceImpl implements PreserveService {
             consignRequest.setPhone(oti.getConsigneePhone());
             consignRequest.setWeight(oti.getConsigneeWeight());
             consignRequest.setWithin(oti.isWithin());
-            LOGGER.info("CONSIGN INFO : " +consignRequest.toString());
+            LOGGER.info("CONSIGN INFO : " +consignRequest);
             Response icresult = createConsign(consignRequest, headers);
             if (icresult.getStatus() == 1) {
                 PreserveServiceImpl.LOGGER.info("[Step 7] Consign Success");
@@ -269,7 +269,7 @@ public class PreserveServiceImpl implements PreserveService {
             String infoJson = JsonUtils.object2Json(notifyInfo);
             sendService.send(infoJson);
         } catch (Exception e) {
-            PreserveServiceImpl.LOGGER.error("[Preserve Service] send email to mq error, exception is:" + e);
+            PreserveServiceImpl.LOGGER.error("[Preserve Service] send email to mq error, exception is:", e);
             return false;
         }
 

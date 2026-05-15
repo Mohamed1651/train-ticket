@@ -65,7 +65,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     @Override
     public Response updateUser(UserDto userDto, HttpHeaders headers) {
-        LOGGER.info("UPDATE USER: " + userDto.toString());
+        LOGGER.info("UPDATE USER: {}", userDto);
         HttpEntity requestEntity = new HttpEntity(userDto, null);
         ResponseEntity<Response> re = restTemplate.exchange(
                 USER_SERVICE_IP_URI,

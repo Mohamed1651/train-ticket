@@ -99,19 +99,19 @@ public class JWTUtil {
             Jws<Claims> claimsJws = getClaims(token);
             return !claimsJws.getBody().getExpiration().before(new Date());
         } catch (ExpiredJwtException e) {
-            LOGGER.error("Token expired: {} " + e);
+            LOGGER.error("Token expired: ", e);
             throw new TokenException("Token expired");
         } catch (UnsupportedJwtException e) {
-            LOGGER.error("Token format error: {} " + e);
+            LOGGER.error("Token format error: ", e);
             throw new TokenException("Token format error");
         } catch (MalformedJwtException e) {
-            LOGGER.error("Token is not properly constructed: {} " + e);
+            LOGGER.error("Token is not properly constructed: ", e);
             throw new TokenException("Token is not properly constructed");
         } catch (SignatureException e) {
-            LOGGER.error("Signature failure: {} " + e);
+            LOGGER.error("Signature failure: ", e);
             throw new TokenException("Signature failure");
         } catch (IllegalArgumentException e) {
-            LOGGER.error("Illegal parameter exception: {} " + e);
+            LOGGER.error("Illegal parameter exception: ", e);
             throw new TokenException("Illegal parameter exception");
         }
     }

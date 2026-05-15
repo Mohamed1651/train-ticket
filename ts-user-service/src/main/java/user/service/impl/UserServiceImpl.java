@@ -68,7 +68,7 @@ public class UserServiceImpl implements UserService {
 
     private Response createDefaultAuthUser(AuthDto dto) {
         LOGGER.info("CALL TO AUTH");
-        LOGGER.info("AuthDto : " + dto.toString());
+        LOGGER.info("AuthDto : {} ",dto);
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<AuthDto> entity = new HttpEntity<>(dto, null);
         ResponseEntity<Response<AuthDto>> res  = restTemplate.exchange("http://ts-auth-service:12340/api/v1/auth",
@@ -111,7 +111,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Response deleteUser(UUID userId, HttpHeaders headers) {
-        LOGGER.info("DELETE USER BY ID :" + userId);
+        LOGGER.info("DELETE USER BY ID : {}", userId);
         User user = userRepository.findByUserId(userId);
         if (user != null) {
             // first  only admin token can delete success
@@ -128,7 +128,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Response updateUser(UserDto userDto, HttpHeaders headers) {
-        LOGGER.info("UPDATE USER :" + userDto.toString());
+        LOGGER.info("UPDATE USER : {}", userDto);
         User oldUser = userRepository.findByUserName(userDto.getUserName());
         if (oldUser != null) {
             User newUser = User.builder().email(userDto.getEmail())
@@ -148,7 +148,7 @@ public class UserServiceImpl implements UserService {
     }
 
     public void deleteUserAuth(UUID userId, HttpHeaders headers) {
-        LOGGER.info("DELETE USER BY ID :" + userId);
+        LOGGER.info("DELETE USER BY ID : {}", userId);
 
         HttpEntity<Response> httpEntity = new HttpEntity<>(null);
         restTemplate.exchange(AUTH_SERVICE_URI + "/users/" + userId,

@@ -33,7 +33,7 @@ public class BasicController {
     @PostMapping(value = "/basic/travel")
     public HttpEntity queryForTravel(@RequestBody Travel info, @RequestHeader HttpHeaders headers) {
         // TravelResult
-        logger.info("Query for travel: {}", info.toString());
+        logger.info("Query for travel: {}", info);
         return ok(service.queryForTravel(info, headers));
     }
 
