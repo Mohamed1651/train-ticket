@@ -37,95 +37,95 @@ public class InsidePaymentServiceImpl implements InsidePaymentService {
 
     @Override
     public Response pay(PaymentInfo info, HttpHeaders headers) {
-
         String userId = info.getUserId();
+        String requestOrderURL = getOrderUrl(info.getTripId(), info.getOrderId());
 
-        String requestOrderURL = "";
-        if (info.getTripId().startsWith("G") || info.getTripId().startsWith("D")) {
-            requestOrderURL =  "http://ts-order-service:12031/api/v1/orderservice/order/" + info.getOrderId();
-        } else {
-            requestOrderURL = "http://ts-order-other-service:12032/api/v1/orderOtherService/orderOther/" + info.getOrderId();
-        }
-        HttpEntity requestGetOrderResults = new HttpEntity(headers);
+        HttpEntity<Void> requestGetOrderResults = new HttpEntity<>(headers);
         ResponseEntity<Response<Order>> reGetOrderResults = restTemplate.exchange(
                 requestOrderURL,
                 HttpMethod.GET,
                 requestGetOrderResults,
-                new ParameterizedTypeReference<Response<Order>>() {
-                });
+                new ParameterizedTypeReference<Response<Order>>() {});
         Response<Order> result = reGetOrderResults.getBody();
 
-
-        if (result.getStatus() == 1) {
-            Order order = result.getData();
-            if (order.getStatus() != OrderStatus.NOTPAID.getCode()) {
-                InsidePaymentServiceImpl.LOGGER.info("[Inside Payment Service][Pay] Error. Order status Not allowed to Pay.");
-                return new Response<>(0, "Error. Order status Not allowed to Pay.", null);
-            }
-
-            Payment payment = new Payment();
-            payment.setOrderId(info.getOrderId());
-            payment.setPrice(order.getPrice());
-            payment.setUserId(userId);
-
-            //判断一下账户余额够不够，不够要去站外支付
-            List<Payment> payments = paymentRepository.findByUserId(userId);
-            List<Money> addMonies = addMoneyRepository.findByUserId(userId);
-            Iterator<Payment> paymentsIterator = payments.iterator();
-            Iterator<Money> addMoniesIterator = addMonies.iterator();
-
-            BigDecimal totalExpand = new BigDecimal("0");
-            while (paymentsIterator.hasNext()) {
-                Payment p = paymentsIterator.next();
-                totalExpand = totalExpand.add(new BigDecimal(p.getPrice()));
-            }
-            totalExpand = totalExpand.add(new BigDecimal(order.getPrice()));
-
-            BigDecimal money = new BigDecimal("0");
-            while (addMoniesIterator.hasNext()) {
-                Money addMoney = addMoniesIterator.next();
-                money = money.add(new BigDecimal(addMoney.getMoney()));
-            }
-
-            if (totalExpand.compareTo(money) > 0) {
-                //站外支付
-                Payment outsidePaymentInfo = new Payment();
-                outsidePaymentInfo.setOrderId(info.getOrderId());
-                outsidePaymentInfo.setUserId(userId);
-                outsidePaymentInfo.setPrice(order.getPrice());
-
-                /****这里调用第三方支付***/
-
-                HttpEntity requestEntityOutsidePaySuccess = new HttpEntity(outsidePaymentInfo, headers);
-                ResponseEntity<Response> reOutsidePaySuccess = restTemplate.exchange(
-                        "http://ts-payment-service:19001/api/v1/paymentservice/payment",
-                        HttpMethod.POST,
-                        requestEntityOutsidePaySuccess,
-                        Response.class);
-                Response outsidePaySuccess = reOutsidePaySuccess.getBody();
-
-                InsidePaymentServiceImpl.LOGGER.info("Out pay result: {}", outsidePaySuccess);
-                if (outsidePaySuccess.getStatus() == 1) {
-                    payment.setType(PaymentType.O);
-                    paymentRepository.save(payment);
-                    setOrderStatus(info.getTripId(), info.getOrderId(), headers);
-                    return new Response<>(1, "Payment Success " +    outsidePaySuccess.getMsg(), null);
-                } else {
-                    LOGGER.error("Payment failed: {}", outsidePaySuccess.getMsg());
-                    return new Response<>(0, "Payment Failed:  " +  outsidePaySuccess.getMsg(), null);
-                }
-            } else {
-                setOrderStatus(info.getTripId(), info.getOrderId(), headers);
-                payment.setType(PaymentType.P);
-                paymentRepository.save(payment);
-            }
-            LOGGER.info("Payment success, orderId: {}", info.getOrderId());
-            return new Response<>(1, "Payment Success", null);
-
-        } else {
+        if (result == null || result.getStatus() != 1) {
             LOGGER.error("Payment failed: Order not exists, orderId: {}", info.getOrderId());
             return new Response<>(0, "Payment Failed, Order Not Exists", null);
         }
+
+        Order order = result.getData();
+        if (order.getStatus() != OrderStatus.NOTPAID.getCode()) {
+            InsidePaymentServiceImpl.LOGGER.info("[Inside Payment Service][Pay] Error. Order status Not allowed to Pay.");
+            return new Response<>(0, "Error. Order status Not allowed to Pay.", null);
+        }
+
+        Payment payment = new Payment();
+        payment.setOrderId(info.getOrderId());
+        payment.setPrice(order.getPrice());
+        payment.setUserId(userId);
+
+        BigDecimal totalExpand = calculateTotalExpenditure(userId, order.getPrice());
+        BigDecimal totalMoney = calculateTotalBalance(userId);
+
+        if (totalExpand.compareTo(totalMoney) > 0) {
+            return handleOutsidePayment(info, order.getPrice(), payment, headers);
+        }
+
+        setOrderStatus(info.getTripId(), info.getOrderId(), headers);
+        payment.setType(PaymentType.P);
+        paymentRepository.save(payment);
+
+        LOGGER.info("Payment success, orderId: {}", info.getOrderId());
+        return new Response<>(1, "Payment Success", null);
+    }
+
+    private String getOrderUrl(String tripId, String orderId) {
+        if (tripId.startsWith("G") || tripId.startsWith("D")) {
+            return "http://ts-order-service:12031/api/v1/orderservice/order/" + orderId;
+        }
+        return "http://ts-order-other-service:12032/api/v1/orderOtherService/orderOther/" + orderId;
+    }
+
+    private BigDecimal calculateTotalExpenditure(String userId, String currentOrderPrice) {
+        List<Payment> payments = paymentRepository.findByUserId(userId);
+        BigDecimal totalExpand = payments.stream()
+                .map(p -> new BigDecimal(p.getPrice()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return totalExpand.add(new BigDecimal(currentOrderPrice));
+    }
+
+    private BigDecimal calculateTotalBalance(String userId) {
+        List<Money> addMonies = addMoneyRepository.findByUserId(userId);
+        return addMonies.stream()
+                .map(m -> new BigDecimal(m.getMoney()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private Response handleOutsidePayment(PaymentInfo info, String orderPrice, Payment payment, HttpHeaders headers) {
+        Payment outsidePaymentInfo = new Payment();
+        outsidePaymentInfo.setOrderId(info.getOrderId());
+        outsidePaymentInfo.setUserId(info.getUserId());
+        outsidePaymentInfo.setPrice(orderPrice);
+
+        HttpEntity<Payment> requestEntityOutsidePaySuccess = new HttpEntity<>(outsidePaymentInfo, headers);
+        ResponseEntity<Response> reOutsidePaySuccess = restTemplate.exchange(
+                "http://ts-payment-service:19001/api/v1/paymentservice/payment",
+                HttpMethod.POST,
+                requestEntityOutsidePaySuccess,
+                Response.class);
+        Response outsidePaySuccess = reOutsidePaySuccess.getBody();
+
+        InsidePaymentServiceImpl.LOGGER.info("Out pay result: {}", outsidePaySuccess);
+        if (outsidePaySuccess != null && outsidePaySuccess.getStatus() == 1) {
+            payment.setType(PaymentType.O);
+            paymentRepository.save(payment);
+            setOrderStatus(info.getTripId(), info.getOrderId(), headers);
+            return new Response<>(1, "Payment Success " + outsidePaySuccess.getMsg(), null);
+        }
+
+        String errorMsg = outsidePaySuccess != null ? outsidePaySuccess.getMsg() : "Unknown Error";
+        LOGGER.error("Payment failed: {}", errorMsg);
+        return new Response<>(0, "Payment Failed:  " + errorMsg, null);
     }
 
     @Override
