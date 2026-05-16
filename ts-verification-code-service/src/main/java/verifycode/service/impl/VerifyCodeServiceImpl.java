@@ -78,7 +78,9 @@ public class VerifyCodeServiceImpl implements VerifyCodeService {
         String strEnsure = "";
 
         for (int i = 0; i < 4; ++i) {
-            strEnsure += mapTable[(int) (mapTable.length * Math.random())];
+            StringBuilder strEnsureBuilder = new StringBuilder(strEnsure);
+            strEnsureBuilder.append(mapTable[(int) (mapTable.length * Math.random())]);
+            strEnsure = strEnsureBuilder.toString();
 
             g.setColor(new Color(20 + random.nextInt(110), 20 + random.nextInt(110), 20 + random.nextInt(110)));
 
