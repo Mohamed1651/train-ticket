@@ -105,7 +105,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
         if (request.getTrainNumber().startsWith("G") || request.getTrainNumber().startsWith("D")) {
 
             AdminOrderServiceImpl.LOGGER.info("[Update Order]");
-            HttpEntity requestEntity = new HttpEntity(request, null);
+            HttpEntity requestEntity = new HttpEntity(request, headers);
             ResponseEntity<Response> re = restTemplate.exchange(
                     "http://ts-order-service:12031/api/v1/orderservice/order/admin",
                     HttpMethod.PUT,
@@ -115,7 +115,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
 
         } else {
             AdminOrderServiceImpl.LOGGER.info("[Add New Order Other]");
-            HttpEntity requestEntity = new HttpEntity(request, null);
+            HttpEntity requestEntity = new HttpEntity(request, headers);
             ResponseEntity<Response> re = restTemplate.exchange(
                     "http://ts-order-other-service:12032/api/v1/orderOtherService/orderOther/admin",
                     HttpMethod.PUT,
