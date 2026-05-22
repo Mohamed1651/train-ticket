@@ -123,10 +123,12 @@ services:
     build: ts-order-service
     #image: codewisdom/ts-order-service:0.2.0
     restart: always
-    ports:
-      - 12031:12031
+    expose:
+      - 12031
     networks:
       - my-network
+    environment:
+      - JAVA_OPTS=-Xms1g -Xmx2g -XX:+UseG1GC
 
   ts-order-mongo:
     image: mongo:4.4
@@ -193,8 +195,8 @@ services:
     build: ts-travel-service
     #image: codewisdom/ts-travel-service:0.2.0
     restart: always
-    ports:
-      - 12346:12346
+    expose:
+      - 12346
     networks:
       - my-network
 
