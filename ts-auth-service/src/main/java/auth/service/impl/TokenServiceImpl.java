@@ -81,7 +81,7 @@ public class TokenServiceImpl implements TokenService {
                         InfoConstant.USER_NAME_NOT_FOUND_1, username
                 )));
         String token = jwtProvider.createToken(user);
-        LOGGER.info("USER TOKEN: "+ token);
+        LOGGER.info("USER TOKEN: {}", token);
         LOGGER.info("USER ID: " + user.getUserId());
         return new Response<>(1, "login success", new TokenDto(user.getUserId(), username, token));
     }

@@ -211,7 +211,7 @@ public class TravelPlanServiceImpl implements TravelPlanService {
         seatRequest.setTravelDate(travelDate);
         seatRequest.setSeatType(seatType);
 
-        TravelPlanServiceImpl.LOGGER.info("Seat Request is: {}", seatRequest.toString());
+        TravelPlanServiceImpl.LOGGER.info("Seat Request is: {}", seatRequest);
         HttpEntity requestEntity = new HttpEntity(seatRequest, null);
         ResponseEntity<Response<Integer>> re = restTemplate.exchange(
                 "http://ts-seat-service:18898/api/v1/seatservice/seats/left_tickets",

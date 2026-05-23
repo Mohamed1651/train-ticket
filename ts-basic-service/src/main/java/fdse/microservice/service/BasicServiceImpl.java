@@ -67,7 +67,7 @@ public class BasicServiceImpl implements BasicService {
         String startingPlaceId = (String) queryForStationId(info.getStartingPlace(), headers).getData();
         String endPlaceId = (String) queryForStationId(info.getEndPlace(), headers).getData();
 
-        LOGGER.info("startingPlaceId: " + startingPlaceId + "endPlaceId: " + endPlaceId);
+        LOGGER.info("startingPlaceId: {} endPlaceId: {}", startingPlaceId, endPlaceId);
 
         int indexStart = 0;
         int indexEnd = 0;
@@ -76,7 +76,7 @@ public class BasicServiceImpl implements BasicService {
             indexEnd = route.getStations().indexOf(endPlaceId);
         }
 
-        LOGGER.info("indexStart: " + indexStart + " __ " + "indexEnd: " + indexEnd);
+        LOGGER.info("indexStart: {} __ indexEnd: {}", indexStart, indexEnd);
         if (route != null){
             LOGGER.info("route.getDistances().size: " + route.getDistances().size());
         }
@@ -176,7 +176,7 @@ public class BasicServiceImpl implements BasicService {
                 Response.class);
         Response result = re.getBody();
 
-        BasicServiceImpl.LOGGER.info("Response Resutl to String {}", result.toString());
+        BasicServiceImpl.LOGGER.info("Response Result to String {}", result);
         return  JsonUtils.conveterObject(result.getData(), PriceConfig.class);
     }
 

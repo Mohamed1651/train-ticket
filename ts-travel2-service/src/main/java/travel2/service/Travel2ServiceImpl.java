@@ -182,7 +182,7 @@ public class Travel2ServiceImpl implements Travel2Service {
     @Override
     public Response getTripAllDetailInfo(TripAllDetailInfo gtdi, HttpHeaders headers) {
         TripAllDetail gtdr = new TripAllDetail();
-        Travel2ServiceImpl.LOGGER.info("[getTripAllDetailInfo] gtdi info: {}", gtdi.toString());
+        Travel2ServiceImpl.LOGGER.info("[getTripAllDetailInfo] gtdi info: {}", gtdi);
         Trip trip = repository.findByTripId(new TripId(gtdi.getTripId()));
         if (trip == null) {
             gtdr.setTripResponse(null);
@@ -231,7 +231,7 @@ public class Travel2ServiceImpl implements Travel2Service {
                 requestEntity,
                 new ParameterizedTypeReference<Response<TravelResult>>() {
                 });
-        Travel2ServiceImpl.LOGGER.info("Ticket info  is: {}", re.getBody().toString());
+        Travel2ServiceImpl.LOGGER.info("Ticket info  is: {}", re.getBody());
         TravelResult resultForTravel =  re.getBody().getData();
 
 
@@ -244,7 +244,7 @@ public class Travel2ServiceImpl implements Travel2Service {
                 requestEntity,
                 new ParameterizedTypeReference<Response<SoldTicket>>() {
                 });
-        Travel2ServiceImpl.LOGGER.info("Order other Ticket info  is: {}", re.getBody().toString());
+        Travel2ServiceImpl.LOGGER.info("Order other Ticket info  is: {}", re.getBody());
         SoldTicket result = re2.getBody().getData();
 
         if (result == null) {
@@ -393,7 +393,7 @@ public class Travel2ServiceImpl implements Travel2Service {
         seatRequest.setTrainNumber(trainNumber);
         seatRequest.setSeatType(seatType);
         seatRequest.setTravelDate(travelDate);
-        Travel2ServiceImpl.LOGGER.info("Seat request To String: {}", seatRequest.toString());
+        Travel2ServiceImpl.LOGGER.info("Seat request To String: {}", seatRequest);
 
         HttpEntity requestEntity = new HttpEntity(seatRequest, null);
         ResponseEntity<Response<Integer>> re = restTemplate.exchange(
@@ -404,7 +404,7 @@ public class Travel2ServiceImpl implements Travel2Service {
                 });
         int restNumber =   re.getBody().getData();
 
-        Travel2ServiceImpl.LOGGER.info("Get Rest tickets num is: {}", re.getBody().toString());
+        Travel2ServiceImpl.LOGGER.info("Get Rest tickets num is: {}", re.getBody());
         return restNumber;
     }
 

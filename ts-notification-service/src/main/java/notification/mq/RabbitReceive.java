@@ -57,7 +57,7 @@ public class RabbitReceive {
             return;
         }
 
-        logger.info("Receive email object:" + info);
+        logger.info("Receive email object:{}", info);
 
         Mail mail = new Mail();
         mail.setMailFrom(email);
@@ -77,10 +77,10 @@ public class RabbitReceive {
 
         try {
             mailService.sendEmail(mail, "preserve_success.ftl");
-            logger.info("Send email to user " + username + " success");
+            logger.info("Send email to user {} success", username);
             info.setSendStatus(true);
         } catch (Exception e) {
-            logger.error("Send email error: " + e);
+            logger.error("Send email error: ", e);
             info.setSendStatus(false);
         }
 

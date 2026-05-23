@@ -48,10 +48,10 @@ public class VerifyCodeController {
     @GetMapping(value = "/verify/{verifyCode}")
     public boolean verifyCode(@PathVariable String verifyCode, HttpServletRequest request,
                               HttpServletResponse response, @RequestHeader HttpHeaders headers) {
-        LOGGER.info("receivedCode  " + verifyCode);
+        LOGGER.info("receivedCode {} ", verifyCode);
 
         boolean result = verifyCodeService.verifyCode(request, response, verifyCode, headers);
-        LOGGER.info("verify result: " + result);
+        LOGGER.info("verify result: {} ", result);
         return true;
     }
 }

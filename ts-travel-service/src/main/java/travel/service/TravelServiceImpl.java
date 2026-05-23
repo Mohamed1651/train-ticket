@@ -309,7 +309,7 @@ public class TravelServiceImpl implements TravelService {
                 HttpMethod.POST,
                 requestEntity,
                 Response.class);
-        TravelServiceImpl.LOGGER.info("Ts-basic-service ticket info is: {}", re.getBody().toString());
+        TravelServiceImpl.LOGGER.info("Ts-basic-service ticket info is: {}", re.getBody());
         TravelResult resultForTravel = JsonUtils.conveterObject(re.getBody().getData(), TravelResult.class);
 
         //Ticket order _ high-speed train (number of tickets purchased)
@@ -322,7 +322,7 @@ public class TravelServiceImpl implements TravelService {
                 });
 
         Response<SoldTicket> result = re2.getBody();
-        TravelServiceImpl.LOGGER.info("Order info is: {}", result.toString());
+        TravelServiceImpl.LOGGER.info("Order info is: {}", result);
 
 
         //Set the returned ticket information
@@ -424,7 +424,7 @@ public class TravelServiceImpl implements TravelService {
                 requestEntity,
                 new ParameterizedTypeReference<Response<String>>() {
                 });
-        TravelServiceImpl.LOGGER.info("Query for Station id is: {}", re.getBody().toString());
+        TravelServiceImpl.LOGGER.info("Query for Station id is: {}", re.getBody());
 
         return re.getBody().getData();
     }
@@ -440,10 +440,10 @@ public class TravelServiceImpl implements TravelService {
         Response routeRes = re.getBody();
 
         Route route1 = new Route();
-        TravelServiceImpl.LOGGER.info("Routes Response is : {}", routeRes.toString());
+        TravelServiceImpl.LOGGER.info("Routes Response is : {}", routeRes);
         if (routeRes.getStatus() == 1) {
             route1 = JsonUtils.conveterObject(routeRes.getData(), Route.class);
-            TravelServiceImpl.LOGGER.info("Route is: {}", route1.toString());
+            TravelServiceImpl.LOGGER.info("Route is: {}", route1);
         }
         return route1;
     }
@@ -460,7 +460,7 @@ public class TravelServiceImpl implements TravelService {
         seatRequest.setTravelDate(travelDate);
         seatRequest.setSeatType(seatType);
 
-        TravelServiceImpl.LOGGER.info("Seat request To String: {}", seatRequest.toString());
+        TravelServiceImpl.LOGGER.info("Seat request To String: {}", seatRequest);
 
         HttpEntity requestEntity = new HttpEntity(seatRequest, null);
         ResponseEntity<Response<Integer>> re = restTemplate.exchange(
@@ -469,7 +469,7 @@ public class TravelServiceImpl implements TravelService {
                 requestEntity,
                 new ParameterizedTypeReference<Response<Integer>>() {
                 });
-        TravelServiceImpl.LOGGER.info("Get Rest tickets num is: {}", re.getBody().toString());
+        TravelServiceImpl.LOGGER.info("Get Rest tickets num is: {}", re.getBody());
 
         return re.getBody().getData();
     }

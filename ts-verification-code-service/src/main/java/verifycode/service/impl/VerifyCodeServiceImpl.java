@@ -78,7 +78,9 @@ public class VerifyCodeServiceImpl implements VerifyCodeService {
         String strEnsure = "";
 
         for (int i = 0; i < 4; ++i) {
-            strEnsure += mapTable[(int) (mapTable.length * Math.random())];
+            StringBuilder strEnsureBuilder = new StringBuilder(strEnsure);
+            strEnsureBuilder.append(mapTable[(int) (mapTable.length * Math.random())]);
+            strEnsure = strEnsureBuilder.toString();
 
             g.setColor(new Color(20 + random.nextInt(110), 20 + random.nextInt(110), 20 + random.nextInt(110)));
 
@@ -123,7 +125,7 @@ public class VerifyCodeServiceImpl implements VerifyCodeService {
         }
 
         String code = cacheCode.getIfPresent(cookieId);
-        LOGGER.info("GET Code By cookieId " + cookieId + "   is :" + code);
+        LOGGER.info("GET Code By cookieId {}    is : {}", cookieId, code);
         if (code == null) {
             VerifyCodeServiceImpl.LOGGER.warn("Get image code warn.Code not found,CookieId: {}",cookieId);
             return false;

@@ -16,11 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -192,118 +188,131 @@ public class FoodServiceImpl implements FoodService {
         }
     }
 
-
     @Override
     public Response getAllFood(String date, String startStation, String endStation, String tripId, HttpHeaders headers) {
         FoodServiceImpl.LOGGER.info("data={} start={} end={} tripid={}", date, startStation, endStation, tripId);
-        AllTripFood allTripFood = new AllTripFood();
-
-        if (null == tripId || tripId.length() <= 2) {
+        if (isInvalidTripId(tripId)) {
             FoodServiceImpl.LOGGER.error("Get the Get Food Request Failed! Trip id is not suitable, date: {}, tripId: {}", date, tripId);
             return new Response<>(0, "Trip id is not suitable", null);
         }
 
-        // need return this tow element
-        List<TrainFood> trainFoodList = null;
-        Map<String, List<FoodStore>> foodStoreListMap = new HashMap<>();
-
-        /**--------------------------------------------------------------------------------------*/
-        HttpEntity requestEntityGetTrainFoodListResult = new HttpEntity(null);
-        ResponseEntity<Response<List<TrainFood>>> reGetTrainFoodListResult = restTemplate.exchange(
-                "http://ts-food-map-service:18855/api/v1/foodmapservice/trainfoods/" + tripId,
-                HttpMethod.GET,
-                requestEntityGetTrainFoodListResult,
-                new ParameterizedTypeReference<Response<List<TrainFood>>>() {
-                });
-
-        List<TrainFood> trainFoodListResult = reGetTrainFoodListResult.getBody().getData();
-
-        if (trainFoodListResult != null) {
-            trainFoodList = trainFoodListResult;
-            FoodServiceImpl.LOGGER.info("Get Train Food List!");
-        } else {
+        List<TrainFood> trainFoodList = fetchTrainFoodList(tripId);
+        if (trainFoodList == null) {
             FoodServiceImpl.LOGGER.error("Get the Get Food Request Failed!, date: {}, tripId: {}", date, tripId);
             return new Response<>(0, "Get the Get Food Request Failed!", null);
         }
-        //车次途经的车站
-        /**--------------------------------------------------------------------------------------*/
-        HttpEntity requestEntityGetRouteResult = new HttpEntity(null, null);
-        ResponseEntity<Response<Route>> reGetRouteResult = restTemplate.exchange(
-                "http://ts-travel-service:12346/api/v1/travelservice/routes/" + tripId,
-                HttpMethod.GET,
-                requestEntityGetRouteResult,
-                new ParameterizedTypeReference<Response<Route>>() {
-                });
-        Response<Route> stationResult = reGetRouteResult.getBody();
 
-        if (stationResult.getStatus() == 1) {
-            Route route = stationResult.getData();
-            List<String> stations = route.getStations();
-            //去除不经过的站，如果起点终点有的话
-            if (null != startStation && !"".equals(startStation)) {
-                /**--------------------------------------------------------------------------------------*/
-                HttpEntity requestEntityStartStationId = new HttpEntity(null);
-                ResponseEntity<Response<String>> reStartStationId = restTemplate.exchange(
-                        "http://ts-station-service:12345/api/v1/stationservice/stations/id/" + startStation,
-                        HttpMethod.GET,
-                        requestEntityStartStationId,
-                        new ParameterizedTypeReference<Response<String>>() {
-                        });
-                Response<String> startStationId = reStartStationId.getBody();
+        Response<Route> stationResult = fetchRoute(tripId);
+        AllTripFood allTripFood = new AllTripFood();
 
-                for (int i = 0; i < stations.size(); i++) {
-                    if (stations.get(i).equals(startStationId.getData())) {
-                        break;
-                    } else {
-                        stations.remove(i);
-                    }
-                }
-            }
-            if (null != endStation && !"".equals(endStation)) {
-                /**--------------------------------------------------------------------------------------*/
-                HttpEntity requestEntityEndStationId = new HttpEntity(null);
-                ResponseEntity<Response<String>> reEndStationId = restTemplate.exchange(
-                        "http://ts-station-service:12345/api/v1/stationservice/stations/id/" + endStation,
-                        HttpMethod.GET,
-                        requestEntityEndStationId,
-                        new ParameterizedTypeReference<Response<String>>() {
-                        });
-                Response endStationId = reEndStationId.getBody();
-
-                for (int i = stations.size() - 1; i >= 0; i--) {
-                    if (stations.get(i).equals(endStationId.getData())) {
-                        break;
-                    } else {
-                        stations.remove(i);
-                    }
-                }
-            }
-
-            HttpEntity requestEntityFoodStoresListResult = new HttpEntity(stations, null);
-            ResponseEntity<Response<List<FoodStore>>> reFoodStoresListResult = restTemplate.exchange(
-                    "http://ts-food-map-service:18855/api/v1/foodmapservice/foodstores",
-                    HttpMethod.POST,
-                    requestEntityFoodStoresListResult,
-                    new ParameterizedTypeReference<Response<List<FoodStore>>>() {
-                    });
-            List<FoodStore> foodStoresListResult = reFoodStoresListResult.getBody().getData();
-            if (foodStoresListResult != null && !foodStoresListResult.isEmpty()) {
-                for (String stationId : stations) {
-                    List<FoodStore> res = foodStoresListResult.stream()
-                            .filter(foodStore -> (foodStore.getStationId().equals(stationId)))
-                            .collect(Collectors.toList());
-                    foodStoreListMap.put(stationId, res);
-                }
-            } else {
-                FoodServiceImpl.LOGGER.error("Get the Get Food Request Failed! foodStoresListResult is null, date: {}, tripId: {}", date, tripId);
-                return new Response<>(0, "Get All Food Failed", allTripFood);
-            }
-        } else {
+        if (isInvalidStationResult(stationResult)) {
             FoodServiceImpl.LOGGER.error("Get the Get Food Request Failed! station status error, date: {}, tripId: {}", date, tripId);
             return new Response<>(0, "Get All Food Failed", allTripFood);
         }
+
+        List<String> stations = stationResult.getData().getStations();
+        List<String> filteredStations = filterStations(stations, startStation, endStation);
+
+        Map<String, List<FoodStore>> foodStoreListMap = fetchAndMapFoodStores(filteredStations, date, tripId);
+        if (foodStoreListMap.isEmpty()) {
+            return new Response<>(0, "Get All Food Failed", allTripFood);
+        }
+
         allTripFood.setTrainFoodList(trainFoodList);
         allTripFood.setFoodStoreListMap(foodStoreListMap);
         return new Response<>(1, "Get All Food Success", allTripFood);
+    }
+
+    private boolean isInvalidTripId(String tripId) {
+        return null == tripId || tripId.length() <= 2;
+    }
+
+    private boolean isInvalidStationResult(Response<Route> stationResult) {
+        return stationResult == null || stationResult.getStatus() != 1 || stationResult.getData() == null;
+    }
+
+    private Response<Route> fetchRoute(String tripId) {
+        HttpEntity<Void> requestEntity = new HttpEntity<>(null);
+        ResponseEntity<Response<Route>> response = restTemplate.exchange(
+                "http://ts-travel-service:12346/api/v1/travelservice/routes/" + tripId,
+                HttpMethod.GET,
+                requestEntity,
+                new ParameterizedTypeReference<Response<Route>>() {}
+        );
+        return response.getBody();
+    }
+
+    private List<TrainFood> fetchTrainFoodList(String tripId) {
+        HttpEntity<Void> requestEntity = new HttpEntity<>(null);
+        ResponseEntity<Response<List<TrainFood>>> response = restTemplate.exchange(
+                "http://ts-food-map-service:18855/api/v1/foodmapservice/trainfoods/" + tripId,
+                HttpMethod.GET,
+                requestEntity,
+                new ParameterizedTypeReference<Response<List<TrainFood>>>() {}
+        );
+        return response.getBody() != null ? response.getBody().getData() : null;
+    }
+
+    private String fetchStationId(String stationName) {
+        HttpEntity<Void> requestEntity = new HttpEntity<>(null);
+        ResponseEntity<Response<String>> response = restTemplate.exchange(
+                "http://ts-station-service:12345/api/v1/stationservice/stations/id/" + stationName,
+                HttpMethod.GET,
+                requestEntity,
+                new ParameterizedTypeReference<Response<String>>() {}
+        );
+        return response.getBody() != null ? response.getBody().getData() : null;
+    }
+
+    private List<String> filterStations(List<String> stations, String startStation, String endStation) {
+        int startIndex = java.util.Optional.ofNullable(startStation)
+                .filter(s -> !s.isEmpty())
+                .map(this::fetchStationId)
+                .map(stations::indexOf)
+                .orElse(0);
+
+        int endIndex = java.util.Optional.ofNullable(endStation)
+                .filter(s -> !s.isEmpty())
+                .map(this::fetchStationId)
+                .map(stations::indexOf)
+                .orElse(stations.size() - 1);
+
+        // Safeguard indices against missing stations (-1) or inverted routes
+        int actualStart = Math.max(0, startIndex);
+        int actualEnd = endIndex >= 0 && endIndex >= actualStart ? endIndex : stations.size() - 1;
+
+        return stations.subList(actualStart, actualEnd + 1);
+    }
+
+    private Map<String, List<FoodStore>> fetchAndMapFoodStores(List<String> stations, String date, String tripId) {
+        HttpEntity<List<String>> requestEntity = new HttpEntity<>(stations, null);
+        ResponseEntity<Response<List<FoodStore>>> response = restTemplate.exchange(
+                "http://ts-food-map-service:18855/api/v1/foodmapservice/foodstores",
+                HttpMethod.POST,
+                requestEntity,
+                new ParameterizedTypeReference<Response<List<FoodStore>>>() {}
+        );
+
+        List<FoodStore> foodStores = response.getBody() != null ? response.getBody().getData() : null;
+        if (foodStores == null || foodStores.isEmpty()) {
+            FoodServiceImpl.LOGGER.error("Get the Get Food Request Failed! foodStoresListResult is null, date: {}, tripId: {}", date, tripId);
+            return Collections.emptyMap();
+        }
+
+        return mapStoresToStations(stations, foodStores);
+    }
+
+    private Map<String, List<FoodStore>> mapStoresToStations(List<String> stations, List<FoodStore> foodStores) {
+        // GroupingBy drops complexity score to 0 instead of nesting loops/streams manually
+        Map<String, List<FoodStore>> groupedStores = foodStores.stream()
+                .collect(Collectors.groupingBy(FoodStore::getStationId));
+
+        return stations.stream()
+                .collect(Collectors.toMap(
+                        stationId -> stationId,
+                        stationId -> groupedStores.getOrDefault(stationId, Collections.emptyList()),
+                        (oldValue, newValue) -> oldValue,
+                        HashMap::new
+                ));
     }
 }

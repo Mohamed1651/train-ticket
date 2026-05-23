@@ -66,7 +66,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Response deleteByUserId(UUID userId, HttpHeaders headers) {
-        LOGGER.info("DELETE USER :" + userId);
+        LOGGER.info("DELETE USER :{}", userId);
         userRepository.deleteByUserId(userId);
         return new Response(1, "DELETE USER SUCCESS", null);
     }
@@ -96,7 +96,7 @@ public class UserServiceImpl implements UserService {
         }
 
         if (!infos.isEmpty()) {
-            LOGGER.warn(infos.toString());
+            LOGGER.warn("{}", infos);
             throw new UserOperationException(infos.toString());
         }
     }

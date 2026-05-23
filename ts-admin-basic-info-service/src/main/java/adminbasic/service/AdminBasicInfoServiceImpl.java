@@ -62,7 +62,7 @@ public class AdminBasicInfoServiceImpl implements AdminBasicInfoService {
     @Override
     public Response modifyContact(Contacts mci, HttpHeaders headers) {
         Response result;
-        LOGGER.info("MODIFY CONTACTS: " + mci.toString());
+        LOGGER.info("MODIFY CONTACTS: {}", mci);
         HttpEntity requestEntity = new HttpEntity(mci, headers);
         ResponseEntity<Response> re = restTemplate.exchange(
                 "http://ts-contacts-service:12347/api/v1/contactservice/contacts",

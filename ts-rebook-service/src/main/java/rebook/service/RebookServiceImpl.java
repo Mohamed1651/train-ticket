@@ -31,95 +31,94 @@ public class RebookServiceImpl implements RebookService {
 
     @Override
     public Response rebook(RebookInfo info, HttpHeaders httpHeaders) {
-
         Response<Order> queryOrderResult = getOrderByRebookInfo(info, httpHeaders);
-
-        if (queryOrderResult.getStatus() == 1) {
-            if (queryOrderResult.getData().getStatus() != 1) {
-                RebookServiceImpl.LOGGER.warn("Rebook warn.Order not suitable to rebook,OrderId: {}",info.getOrderId());
-                return new Response<>(0, "you order not suitable to rebook!", null);
-            }
-        } else {
-            RebookServiceImpl.LOGGER.warn("Rebook warn.Order not found,OrderId: {}",info.getOrderId());
-            return new Response(0, "order not found", null);
+        if (queryOrderResult.getStatus() != 1) {
+            RebookServiceImpl.LOGGER.warn("Rebook warn.Order not found,OrderId: {}", info.getOrderId());
+            return new Response<>(0, "order not found", null);
         }
 
         Order order = queryOrderResult.getData();
+        Response validateStatusResult = validateOrderStatusAndTime(order, info);
+        if (validateStatusResult != null) return validateStatusResult;
+
+        Response<TripAllDetail> gtdr = verifyTripAndSeatAvailability(order, info, httpHeaders);
+        if (gtdr.getStatus() == 0) return new Response<>(0, gtdr.getMsg(), null);
+
+        return handlePricingAndDifferences(order, info, gtdr.getData(), httpHeaders);
+    }
+
+    private Response validateOrderStatusAndTime(Order order, RebookInfo info) {
+        if (order.getStatus() != 1) {
+            RebookServiceImpl.LOGGER.warn("Rebook warn.Order not suitable to rebook,OrderId: {}", info.getOrderId());
+            return new Response<>(0, "you order not suitable to rebook!", null);
+        }
+
         int status = order.getStatus();
         if (status == OrderStatus.NOTPAID.getCode()) {
-            RebookServiceImpl.LOGGER.warn("Rebook warn.Order not paid, OrderId: {}",info.getOrderId());
+            RebookServiceImpl.LOGGER.warn("Rebook warn.Order not paid, OrderId: {}", info.getOrderId());
             return new Response<>(0, "You haven't paid the original ticket!", null);
-        } else if (status == OrderStatus.PAID.getCode()) {
-            // do nothing
         } else if (status == OrderStatus.CHANGE.getCode()) {
-            RebookServiceImpl.LOGGER.warn("Rebook warn.Order can't change twice,OrderId: {}",info.getOrderId());
+            RebookServiceImpl.LOGGER.warn("Rebook warn.Order can't change twice,OrderId: {}", info.getOrderId());
             return new Response<>(0, "You have already changed your ticket and you can only change one time.", null);
         } else if (status == OrderStatus.COLLECTED.getCode()) {
-            RebookServiceImpl.LOGGER.warn("Rebook warn.Order already collected,OrderId: {}",info.getOrderId());
+            RebookServiceImpl.LOGGER.warn("Rebook warn.Order already collected,OrderId: {}", info.getOrderId());
             return new Response<>(0, "You have already collected your ticket and you can change it now.", null);
-        } else {
-            RebookServiceImpl.LOGGER.warn("Rebook warn.Order can't change,OrderId: {}",info.getOrderId());
+        } else if (status != OrderStatus.PAID.getCode()) {
+            RebookServiceImpl.LOGGER.warn("Rebook warn.Order can't change,OrderId: {}", info.getOrderId());
             return new Response<>(0, "You can't change your ticket.", null);
         }
 
-        //Check the current time and the bus time of the old order, and judge whether the ticket can be changed according to the time. The ticket cannot be changed after two hours.
         if (!checkTime(order.getTravelDate(), order.getTravelTime())) {
-            RebookServiceImpl.LOGGER.warn("Rebook warn.Order beyond change time,OrderId: {}",info.getOrderId());
+            RebookServiceImpl.LOGGER.warn("Rebook warn.Order beyond change time,OrderId: {}", info.getOrderId());
             return new Response<>(0, "You can only change the ticket before the train start or within 2 hours after the train start.", null);
         }
+        return null;
+    }
 
-        //The departure and destination cannot be changed, only the train number, seat and time can be changed
-        //Check the info of seat availability and trains
+    private Response<TripAllDetail> verifyTripAndSeatAvailability(Order order, RebookInfo info, HttpHeaders httpHeaders) {
         TripAllDetailInfo gtdi = new TripAllDetailInfo();
         gtdi.setFrom(queryForStationName(order.getFrom(), httpHeaders));
         gtdi.setTo(queryForStationName(order.getTo(), httpHeaders));
         gtdi.setTravelDate(info.getDate());
         gtdi.setTripId(info.getTripId());
+
         Response<TripAllDetail> gtdr = getTripAllDetailInformation(gtdi, info.getTripId(), httpHeaders);
         if (gtdr.getStatus() == 0) {
-            RebookServiceImpl.LOGGER.warn("Rebook warn.Trip detail not found,OrderId: {}",info.getOrderId());
-            return new Response<>(0, gtdr.getMsg(), null);
-        } else {
-            TripResponse tripResponse = gtdr.getData().getTripResponse();
-            if (info.getSeatType() == SeatClass.FIRSTCLASS.getCode()) {
-                if (tripResponse.getConfortClass() <= 0) {
-                    RebookServiceImpl.LOGGER.warn("Rebook warn.Seat Not Enough,OrderId: {},SeatType: {}",info.getOrderId(),info.getSeatType());
-                    return new Response<>(0, "Seat Not Enough", null);
-                }
-            } else {
-                if (tripResponse.getEconomyClass() == SeatClass.SECONDCLASS.getCode() && tripResponse.getConfortClass() <= 0) {
-                    RebookServiceImpl.LOGGER.warn("Rebook warn.Seat Not Enough,OrderId: {},SeatType: {}",info.getOrderId(),info.getSeatType());
-                    return new Response<>(0, "Seat Not Enough", null);
-                }
-            }
+            RebookServiceImpl.LOGGER.warn("Rebook warn.Trip detail not found,OrderId: {}", info.getOrderId());
+            return gtdr;
         }
 
-        //Deal with the difference, more refund less compensation
-        //Return the original ticket so that someone else can book the corresponding seat
+        TripResponse tripResponse = gtdr.getData().getTripResponse();
+        boolean isFirstClass = info.getSeatType() == SeatClass.FIRSTCLASS.getCode();
 
-        String ticketPrice = "0";
-        if (info.getSeatType() == SeatClass.FIRSTCLASS.getCode()) {
-            ticketPrice = ((TripAllDetail) gtdr.getData()).getTripResponse().getPriceForConfortClass();
-        } else if (info.getSeatType() == SeatClass.SECONDCLASS.getCode()) {
-            ticketPrice = ((TripAllDetail) gtdr.getData()).getTripResponse().getPriceForEconomyClass();
+        if (isFirstClass && tripResponse.getConfortClass() <= 0) {
+            RebookServiceImpl.LOGGER.warn("Rebook warn.Seat Not Enough,OrderId: {},SeatType: {}", info.getOrderId(), info.getSeatType());
+            return new Response<>(0, "Seat Not Enough", null);
+        } else if (!isFirstClass && tripResponse.getEconomyClass() == SeatClass.SECONDCLASS.getCode() && tripResponse.getConfortClass() <= 0) {
+            RebookServiceImpl.LOGGER.warn("Rebook warn.Seat Not Enough,OrderId: {},SeatType: {}", info.getOrderId(), info.getSeatType());
+            return new Response<>(0, "Seat Not Enough", null);
         }
-        String oldPrice = order.getPrice();
-        BigDecimal priceOld = new BigDecimal(oldPrice);
+        return gtdr;
+    }
+
+    private Response handlePricingAndDifferences(Order order, RebookInfo info, TripAllDetail tripDetail, HttpHeaders httpHeaders) {
+        boolean isFirstClass = info.getSeatType() == SeatClass.FIRSTCLASS.getCode();
+        String ticketPrice = isFirstClass ? tripDetail.getTripResponse().getPriceForConfortClass() : tripDetail.getTripResponse().getPriceForEconomyClass();
+
+        BigDecimal priceOld = new BigDecimal(order.getPrice());
         BigDecimal priceNew = new BigDecimal(ticketPrice);
-        if (priceOld.compareTo(priceNew) > 0) {
-            //Refund the difference
+        int comparison = priceOld.compareTo(priceNew);
+
+        if (comparison > 0) {
             String difference = priceOld.subtract(priceNew).toString();
             if (!drawBackMoney(info.getLoginId(), difference, httpHeaders)) {
-                RebookServiceImpl.LOGGER.warn("Rebook warn.Can't draw back the difference money,OrderId: {},LoginId: {},difference: {}",info.getOrderId(),info.getLoginId(),difference);
+                RebookServiceImpl.LOGGER.warn("Rebook warn.Can't draw back the difference money,OrderId: {},LoginId: {},difference: {}", info.getOrderId(), info.getLoginId(), difference);
                 return new Response<>(0, "Can't draw back the difference money, please try again!", null);
             }
-            return updateOrder(order, info, (TripAllDetail) gtdr.getData(), ticketPrice, httpHeaders);
-
-        } else if (priceOld.compareTo(priceNew) == 0) {
-            //do nothing
-            return updateOrder(order, info, (TripAllDetail) gtdr.getData(), ticketPrice, httpHeaders);
+            return updateOrder(order, info, tripDetail, ticketPrice, httpHeaders);
+        } else if (comparison == 0) {
+            return updateOrder(order, info, tripDetail, ticketPrice, httpHeaders);
         } else {
-            //make up the difference
             String difference = priceNew.subtract(priceOld).toString();
             Order orderMoneyDifference = new Order();
             orderMoneyDifference.setDifferenceMoney(difference);

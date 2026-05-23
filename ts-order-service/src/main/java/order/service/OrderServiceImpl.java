@@ -45,7 +45,7 @@ public class OrderServiceImpl implements OrderService {
             }
             LeftTicketInfo leftTicketInfo = new LeftTicketInfo();
             leftTicketInfo.setSoldTickets(ticketSet);
-            OrderServiceImpl.LOGGER.info("Left ticket info is: {}", leftTicketInfo.toString());
+            OrderServiceImpl.LOGGER.info("Left ticket info is: {}", leftTicketInfo);
             return new Response<>(1, success, leftTicketInfo);
         } else {
             OrderServiceImpl.LOGGER.error("Left ticket info is empty, seat from date: {}, train number: {}",seatRequest.getTravelDate(),seatRequest.getTrainNumber());
@@ -105,63 +105,62 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Response<ArrayList<Order>> queryOrders(OrderInfo qi, String accountId, HttpHeaders headers) {
-        //1.Get all orders of the user
+        // 1. Get all orders of the user
         ArrayList<Order> list = orderRepository.findByAccountId(UUID.fromString(accountId));
         OrderServiceImpl.LOGGER.info("[Query Order][Step 1] Get Orders Number of Account: {}", list.size());
-        //2.Check is these orders fit the requirement/
-        if (qi.isEnableStateQuery() || qi.isEnableBoughtDateQuery() || qi.isEnableTravelDateQuery()) {
-            ArrayList<Order> finalList = new ArrayList<>();
-            for (Order tempOrder : list) {
-                boolean statePassFlag = false;
-                boolean boughtDatePassFlag = false;
-                boolean travelDatePassFlag = false;
-                //3.Check order state requirement.
-                if (qi.isEnableStateQuery()) {
-                    if (tempOrder.getStatus() != qi.getState()) {
-                        statePassFlag = false;
-                    } else {
-                        statePassFlag = true;
-                    }
-                } else {
-                    statePassFlag = true;
-                }
-                OrderServiceImpl.LOGGER.info("[Query Order][Step 2][Check Status Fits End]");
-                //4.Check order travel date requirement.
-                if (qi.isEnableTravelDateQuery()) {
-                    if (tempOrder.getTravelDate().before(qi.getTravelDateEnd()) &&
-                            tempOrder.getTravelDate().after(qi.getBoughtDateStart())) {
-                        travelDatePassFlag = true;
-                    } else {
-                        travelDatePassFlag = false;
-                    }
-                } else {
-                    travelDatePassFlag = true;
-                }
-                OrderServiceImpl.LOGGER.info("[Query Order][Step 2][Check Travel Date End]");
-                //5.Check order bought date requirement.
-                if (qi.isEnableBoughtDateQuery()) {
-                    if (tempOrder.getBoughtDate().before(qi.getBoughtDateEnd()) &&
-                            tempOrder.getBoughtDate().after(qi.getBoughtDateStart())) {
-                        boughtDatePassFlag = true;
-                    } else {
-                        boughtDatePassFlag = false;
-                    }
-                } else {
-                    boughtDatePassFlag = true;
-                }
-                OrderServiceImpl.LOGGER.info("[Query Order][Step 2][Check Bought Date End]");
-                //6.check if all requirement fits.
-                if (statePassFlag && boughtDatePassFlag && travelDatePassFlag) {
-                    finalList.add(tempOrder);
-                }
-                OrderServiceImpl.LOGGER.info("[Query Order][Step 2][Check All Requirement End]");
-            }
-            OrderServiceImpl.LOGGER.info("[Query Order] Get order num: {}", finalList.size());
-            return new Response<>(1, "Get order num", finalList);
-        } else {
+
+        // 2. Check if these orders fit the requirement
+        if (!qi.isEnableStateQuery() && !qi.isEnableBoughtDateQuery() && !qi.isEnableTravelDateQuery()) {
             OrderServiceImpl.LOGGER.warn("[Query Order] Orders don't fit the requirement, loginId: {}", qi.getLoginId());
             return new Response<>(1, "Get order num", list);
         }
+
+        ArrayList<Order> finalList = new ArrayList<>();
+        for (Order tempOrder : list) {
+            if (isOrderMatchingRequirements(tempOrder, qi)) {
+                finalList.add(tempOrder);
+            }
+            OrderServiceImpl.LOGGER.info("[Query Order][Step 2][Check All Requirement End]");
+        }
+
+        OrderServiceImpl.LOGGER.info("[Query Order] Get order num: {}", finalList.size());
+        return new Response<>(1, "Get order num", finalList);
+    }
+
+    private boolean isOrderMatchingRequirements(Order tempOrder, OrderInfo qi) {
+        boolean statePassFlag = checkStateRequirement(tempOrder, qi);
+        OrderServiceImpl.LOGGER.info("[Query Order][Step 2][Check Status Fits End]");
+
+        boolean travelDatePassFlag = checkTravelDateRequirement(tempOrder, qi);
+        OrderServiceImpl.LOGGER.info("[Query Order][Step 2][Check Travel Date End]");
+
+        boolean boughtDatePassFlag = checkBoughtDateRequirement(tempOrder, qi);
+        OrderServiceImpl.LOGGER.info("[Query Order][Step 2][Check Bought Date End]");
+
+        return statePassFlag && boughtDatePassFlag && travelDatePassFlag;
+    }
+
+    private boolean checkStateRequirement(Order tempOrder, OrderInfo qi) {
+        if (qi.isEnableStateQuery()) {
+            return tempOrder.getStatus() == qi.getState();
+        }
+        return true;
+    }
+
+    private boolean checkTravelDateRequirement(Order tempOrder, OrderInfo qi) {
+        if (qi.isEnableTravelDateQuery()) {
+            return tempOrder.getTravelDate().before(qi.getTravelDateEnd()) &&
+                    tempOrder.getTravelDate().after(qi.getBoughtDateStart());
+        }
+        return true;
+    }
+
+    private boolean checkBoughtDateRequirement(Order tempOrder, OrderInfo qi) {
+        if (qi.isEnableBoughtDateQuery()) {
+            return tempOrder.getBoughtDate().before(qi.getBoughtDateEnd()) &&
+                    tempOrder.getBoughtDate().after(qi.getBoughtDateStart());
+        }
+        return true;
     }
 
     @Override
@@ -190,7 +189,7 @@ public class OrderServiceImpl implements OrderService {
                 requestEntity,
                 new ParameterizedTypeReference<Response<List<String>>>() {
                 });
-        OrderServiceImpl.LOGGER.info("Name List is: {}", re.getBody().toString());
+        OrderServiceImpl.LOGGER.info("Name List is: {}", re.getBody());
         return re.getBody().getData();
     }
 
@@ -400,13 +399,13 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Response updateOrder(Order order, HttpHeaders headers) {
-        LOGGER.info("UPDATE ORDER INFO: " + order.toString());
+        LOGGER.info("UPDATE ORDER INFO: {} ", order);
         Order oldOrder = orderRepository.findById(order.getId());
         if (oldOrder == null) {
             OrderServiceImpl.LOGGER.error("[Admin Update Order] Fail.Order not found, OrderId: {}",order.getId());
             return new Response<>(0, "Order Not Found, Can't update", null);
         } else {
-            OrderServiceImpl.LOGGER.info("{}", oldOrder.toString());
+            OrderServiceImpl.LOGGER.info("{}", oldOrder);
             oldOrder.setAccountId(order.getAccountId());
             oldOrder.setBoughtDate(order.getBoughtDate());
             oldOrder.setTravelDate(order.getTravelDate());

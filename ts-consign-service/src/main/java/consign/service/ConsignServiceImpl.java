@@ -61,9 +61,9 @@ public class ConsignServiceImpl implements ConsignService {
                 });
         consignRecord.setPrice(re.getBody().getData());
 
-        LOGGER.info("SAVE consign info : " + consignRecord.toString());
+        LOGGER.info("SAVE consign info : {}", consignRecord);
         ConsignRecord result = repository.save(consignRecord);
-        LOGGER.info("SAVE consign result : " + result.toString());
+        LOGGER.info("SAVE consign result : {}", result);
         return new Response<>(1, "You have consigned successfully! The price is " + result.getPrice(), result);
     }
 
