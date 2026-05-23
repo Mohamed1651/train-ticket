@@ -15,6 +15,8 @@ import org.springframework.core.annotation.AnnotationUtils;
 
 class SleuthAnnotationUtils {
 
+	private SleuthAnnotationUtils(){}
+
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	static boolean isMethodAnnotated(Method method) {
