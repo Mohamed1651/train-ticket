@@ -29,7 +29,7 @@ public class OrderServiceImpl implements OrderService {
     private RestTemplate restTemplate;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderServiceImpl.class);
-
+    private static final String SUCCESS_MESSAGE = "Success.";
     String success = "Success";
     String orderNotFound = "Order Not Found";
 
@@ -218,7 +218,7 @@ public class OrderServiceImpl implements OrderService {
             oldOrder.setContactsDocumentNumber(order.getContactsDocumentNumber());
             oldOrder.setDocumentType(order.getDocumentType());
             orderRepository.save(oldOrder);
-            OrderServiceImpl.LOGGER.info("Success.");
+            OrderServiceImpl.LOGGER.info(SUCCESS_MESSAGE);
             return new Response<>(1, success, oldOrder);
         }
     }
@@ -277,7 +277,7 @@ public class OrderServiceImpl implements OrderService {
     public Response getAllOrders(HttpHeaders headers) {
         ArrayList<Order> orders = orderRepository.findAll();
         if (orders != null && !orders.isEmpty()) {
-            return new Response<>(1, "Success.", orders);
+            return new Response<>(1, SUCCESS_MESSAGE, orders);
         } else {
             OrderServiceImpl.LOGGER.warn("Find all orders warn: {}","No content");
             return new Response<>(0, "No Content.", null);
@@ -329,7 +329,7 @@ public class OrderServiceImpl implements OrderService {
             OrderServiceImpl.LOGGER.error("Order not found, OrderId: {}",orderId);
             return new Response<>(0, orderNotFound, null);
         } else {
-            return new Response<>(1, "Success.", order);
+            return new Response<>(1, SUCCESS_MESSAGE, order);
         }
     }
 

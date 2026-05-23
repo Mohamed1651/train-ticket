@@ -27,7 +27,7 @@ public class TravelPlanServiceImpl implements TravelPlanService {
     private RestTemplate restTemplate;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TravelPlanServiceImpl.class);
-
+    private static final String NO_CONTENT = "No Content";
     String success = "Success";
     String cannotFind = "Cannot Find";
 
@@ -106,7 +106,7 @@ public class TravelPlanServiceImpl implements TravelPlanService {
 
             return new Response<>(1, success, lists);
         } else {
-            TravelPlanServiceImpl.LOGGER.warn("Get cheapest trip warn.Route Plan Result Units: {}","No Content");
+            TravelPlanServiceImpl.LOGGER.warn("Get cheapest trip warn.Route Plan Result Units: {}",NO_CONTENT);
             return new Response<>(0, cannotFind, null);
         }
     }
@@ -150,7 +150,7 @@ public class TravelPlanServiceImpl implements TravelPlanService {
             }
             return new Response<>(1, success, lists);
         } else {
-            TravelPlanServiceImpl.LOGGER.warn("Get quickest trip warn.Route Plan Result Units: {}","No Content");
+            TravelPlanServiceImpl.LOGGER.warn("Get quickest trip warn.Route Plan Result Units: {}",NO_CONTENT);
             return new Response<>(0, cannotFind, null);
         }
     }
@@ -194,7 +194,7 @@ public class TravelPlanServiceImpl implements TravelPlanService {
             }
             return new Response<>(1, success, lists);
         } else {
-            TravelPlanServiceImpl.LOGGER.warn("Get min stations trip warn.Route Plan Result Units: {}","No Content");
+            TravelPlanServiceImpl.LOGGER.warn("Get min stations trip warn.Route Plan Result Units: {}",NO_CONTENT);
             return new Response<>(0, cannotFind, null);
         }
     }

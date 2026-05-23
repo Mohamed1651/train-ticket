@@ -24,7 +24,7 @@ public class FoodMapServiceImpl implements FoodMapService {
     TrainFoodRepository trainFoodRepository;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FoodMapServiceImpl.class);
-
+    private static final String FOODSTORE_EMPTY = "Food store is empty";
     String success = "Success";
     String noContent = "No content";
 
@@ -57,8 +57,8 @@ public class FoodMapServiceImpl implements FoodMapService {
         if (foodStores != null && !foodStores.isEmpty()) {
             return new Response<>(1, success, foodStores);
         } else {
-            FoodMapServiceImpl.LOGGER.error("List food stores error: {}", "Food store is empty");
-            return new Response<>(0, "Food store is empty", null);
+            FoodMapServiceImpl.LOGGER.error("List food stores error: {}", FOODSTORE_EMPTY);
+            return new Response<>(0, FOODSTORE_EMPTY, null);
         }
     }
 
@@ -79,8 +79,8 @@ public class FoodMapServiceImpl implements FoodMapService {
         if (foodStoreList != null && !foodStoreList.isEmpty()) {
             return new Response<>(1, success, foodStoreList);
         } else {
-            FoodMapServiceImpl.LOGGER.error("List food stores by station id error: {}, stationId: {}", "Food store is empty", stationId);
-            return new Response<>(0, "Food store is empty", null);
+            FoodMapServiceImpl.LOGGER.error("List food stores by station id error: {}, stationId: {}", FOODSTORE_EMPTY, stationId);
+            return new Response<>(0, FOODSTORE_EMPTY, null);
         }
     }
 
@@ -101,7 +101,7 @@ public class FoodMapServiceImpl implements FoodMapService {
         if (foodStoreList != null) {
             return new Response<>(1, success, foodStoreList);
         } else {
-            FoodMapServiceImpl.LOGGER.error("List food stores by station ids error: {}, stationId list: {}", "Food store is empty", stationIds);
+            FoodMapServiceImpl.LOGGER.error("List food stores by station ids error: {}, stationId list: {}", FOODSTORE_EMPTY, stationIds);
             return new Response<>(0, noContent, null);
         }
     }

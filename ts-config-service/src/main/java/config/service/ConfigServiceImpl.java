@@ -22,8 +22,9 @@ public class ConfigServiceImpl implements ConfigService {
     ConfigRepository repository;
 
     private static final Logger logger = LoggerFactory.getLogger(ConfigServiceImpl.class);
-
+    private static final String NO_CONTENT = "No content";
     String config0 = "Config ";
+
 
     @Override
     public Response create(Config info, HttpHeaders headers) {
@@ -58,8 +59,8 @@ public class ConfigServiceImpl implements ConfigService {
     public Response query(String name, HttpHeaders headers) {
         Config config = repository.findByName(name);
         if (config == null) {
-            logger.warn("Config does not exist, name: {}, message: {}", name, "No content");
-            return new Response<>(0, "No content", null);
+            logger.warn("Config does not exist, name: {}, message: {}", name, NO_CONTENT);
+            return new Response<>(0, NO_CONTENT, null);
         } else {
             logger.info("Query config {} success", name);
             return new Response<>(1, "Success", config);
@@ -88,8 +89,8 @@ public class ConfigServiceImpl implements ConfigService {
             logger.info("Query all config success");
             return new Response<>(1, "Find all  config success", configList);
         } else {
-            logger.warn("Query config: {}", "No content");
-            return new Response<>(0, "No content", null);
+            logger.warn("Query config: {}", NO_CONTENT);
+            return new Response<>(0, NO_CONTENT, null);
         }
     }
 }

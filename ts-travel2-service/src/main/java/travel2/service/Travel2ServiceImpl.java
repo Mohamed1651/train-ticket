@@ -32,7 +32,7 @@ public class Travel2ServiceImpl implements Travel2Service {
     private static final Logger LOGGER = LoggerFactory.getLogger(Travel2ServiceImpl.class);
 
     String success = "Success";
-    String noCnontent = "No Content";
+    private static final String noCnontent = "No Content";
 
     @Override
     public Response getRouteByTripId(String tripId, HttpHeaders headers) {
@@ -310,7 +310,7 @@ public class Travel2ServiceImpl implements Travel2Service {
         if (tripList != null && !tripList.isEmpty()) {
             return new Response<>(1, success, tripList);
         }
-        Travel2ServiceImpl.LOGGER.warn("Query all trips warn: {}","No Content");
+        Travel2ServiceImpl.LOGGER.warn("Query all trips warn: {}",noCnontent);
         return new Response<>(0, noCnontent, null);
     }
 
@@ -422,7 +422,7 @@ public class Travel2ServiceImpl implements Travel2Service {
         if (!adminTrips.isEmpty()) {
             return new Response<>(1, "Travel Service Admin Query All Travel Success", adminTrips);
         } else {
-            Travel2ServiceImpl.LOGGER.warn("Admin query all trips warn: {}","No Content");
+            Travel2ServiceImpl.LOGGER.warn("Admin query all trips warn: {}",noCnontent);
             return new Response<>(0, noCnontent, null);
         }
     }

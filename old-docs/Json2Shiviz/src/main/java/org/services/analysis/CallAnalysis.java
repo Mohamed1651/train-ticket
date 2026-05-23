@@ -22,7 +22,10 @@ import org.json.JSONObject;
 public class CallAnalysis {
 
 	public static void main(String[] args) {
-
+		private static final String ERROR_KEY = "error";
+		private static final String FAILED_KEY = "failed";
+		private static final String SERVICE_KEY = "service";
+		private static final String VALUE_KEY = "value";
 		HashMap<String, HashMap<String, Object>> traces = new HashMap<String, HashMap<String, Object>>();
 		List<String> pListAll = new ArrayList<String>();
 
@@ -56,26 +59,26 @@ public class CallAnalysis {
 					JSONArray annotations = spanobj.getJSONArray("annotations");
 					for (int i = 0; i < annotations.length(); i++) {
 						JSONObject anno = annotations.getJSONObject(i);
-						if ("sr".equals(anno.getString("value"))) {
+						if ("sr".equals(anno.getString(VALUE_KEY))) {
 							JSONObject endpoint = anno.getJSONObject("endpoint");
 							String service = endpoint.getString("serviceName");
-							content.put("service", service);
+							content.put(SERVICE_KEY, service);
 						}
 					}
 					
 					if (name.contains("message:")) {
 						if ("message:input".equals(name)) {
-							content.put("api", content.get("service") + "." + "message_received");
+							content.put("api", content.get(SERVICE_KEY) + "." + "message_received");
 						}
 					} else {
 						JSONArray binaryAnnotations = spanobj.getJSONArray("binaryAnnotations");
 						for (int i = 0; i < binaryAnnotations.length(); i++) {
 							JSONObject anno = binaryAnnotations.getJSONObject(i);
-							if ("error".equals(anno.getString("key"))) {
-								content.put("error", anno.getString("value"));
+							if (ERROR_KEY.equals(anno.getString("key"))) {
+								content.put(ERROR_KEY, anno.getString(VALUE_KEY));
 							}
 							if ("mvc.controller.class".equals(anno.getString("key"))
-									&& !"BasicErrorController".equals(anno.getString("value"))) {
+									&& !"BasicErrorController".equals(anno.getString(VALUE_KEY)) {
 								String classname = anno.getString("value");
 								content.put("classname", classname);
 							}
@@ -86,7 +89,7 @@ public class CallAnalysis {
 							}
 						}
 						content.put("api",
-								content.get("service") + "." + content.get("classname") + "." + content.get("methodname"));
+								content.get(SERVICE_KEY) + "." + content.get("classname") + "." + content.get("methodname"));
 					}
 					
 					serviceList.add(content);
@@ -97,7 +100,7 @@ public class CallAnalysis {
 			List<HashMap<String, String>> processList = serviceList.stream()
 					.filter(elem -> !"message:output".equals(elem.get("spanname"))).collect(Collectors.toList());
 			// processList.stream().forEach(n -> System.out.println(n));
-			boolean failed = processList.stream().anyMatch(pl -> pl.containsKey("error"));
+			boolean failed = processList.stream().anyMatch(pl -> pl.containsKey(ERROR_KEY));
 
 			// final info
 			List<String> pList = processList.stream().map(pl -> {
@@ -107,7 +110,7 @@ public class CallAnalysis {
 			pListAll.addAll(pList);
 
 			HashMap<String, Object> traceContent = new HashMap<String, Object>();
-			traceContent.put("failed", failed);
+			traceContent.put(FAILED_KEY, failed);
 			traceContent.put("list", pList);
 			traces.put(traceId, traceContent);
 
@@ -120,7 +123,7 @@ public class CallAnalysis {
 		double N = traces.keySet().size();
 		//failed
 		double NF = traces.values().stream().filter(trace->{
-			return (Boolean)trace.get("failed");
+			return (Boolean)trace.get(FAILED_KEY);
 		}).collect(Collectors.toList()).size();
 		double NS = N - NF;
 		System.out.println("Failed cases: " + NF);
@@ -136,7 +139,7 @@ public class CallAnalysis {
 		
 		traces.values().stream().forEach(trace->{
 			List<String> pList = (List<String>)trace.get("list");
-			if((Boolean)trace.get("failed")){
+			if((Boolean)trace.get(FAILED_KEY)){
 				pList.stream().forEach(pl -> pListNCF.put(pl, pListNCF.get(pl)+1));
 			}else{
 				pList.stream().forEach(pl -> pListNCS.put(pl, pListNCS.get(pl)+1));
