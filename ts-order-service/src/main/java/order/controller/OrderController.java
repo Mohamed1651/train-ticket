@@ -24,7 +24,7 @@ public class OrderController {
     private OrderService orderService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderController.class);
-
+    private static final String VERIFY_LOGIN = "[Verify Login] Success";
     @GetMapping(path = "/welcome")
     public String home() {
         return "Welcome to [ Order Service ] !";
@@ -42,7 +42,7 @@ public class OrderController {
     @PostMapping(path = "/order")
     public HttpEntity createNewOrder(@RequestBody Order createOrder, @RequestHeader HttpHeaders headers) {
         OrderController.LOGGER.info("[Create Order] Create Order form {} ---> {} at {}", createOrder.getFrom(), createOrder.getTo(), createOrder.getTravelDate());
-        OrderController.LOGGER.info("[Verify Login] Success");
+        OrderController.LOGGER.info(VERIFY_LOGIN);
         return ok(orderService.create(createOrder, headers));
     }
 
@@ -57,7 +57,7 @@ public class OrderController {
     public HttpEntity queryOrders(@RequestBody OrderInfo qi,
                                   @RequestHeader HttpHeaders headers) {
         OrderController.LOGGER.info("[Query Orders] Query Orders for {}", qi.getLoginId());
-        OrderController.LOGGER.info("[Verify Login] Success");
+        OrderController.LOGGER.info(VERIFY_LOGIN);
         return ok(orderService.queryOrders(qi, qi.getLoginId(), headers));
     }
 
@@ -125,7 +125,7 @@ public class OrderController {
     public HttpEntity saveOrderInfo(@RequestBody Order orderInfo,
                                     @RequestHeader HttpHeaders headers) {
 
-        OrderController.LOGGER.info("[Verify Login] Success");
+        OrderController.LOGGER.info(VERIFY_LOGIN);
         return ok(orderService.saveChanges(orderInfo, headers));
     }
 

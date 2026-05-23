@@ -7,6 +7,10 @@ import org.springframework.util.StringUtils;
 
 public final class ItemNameUtil {
 
+	private ItemNameUtil(){
+
+	}
+
 	static final int MAX_NAME_LENGTH = 50;
 
 	public static String shorten(String name) {

@@ -185,7 +185,7 @@ public class OrderOtherServiceImplTest {
                 requestEntity,
                 new ParameterizedTypeReference<Response<List<String>>>() {
                 })).thenReturn(re);
-        List<String> result = orderOtherServiceImpl.queryForStationId(ids, headers);
+        List<String> result = orderOtherServiceImpl.queryForStationId(ids);
         Assert.assertNull(result);
     }
 

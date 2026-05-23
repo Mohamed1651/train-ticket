@@ -99,7 +99,7 @@ public class BasicServiceImplTest {
                 HttpMethod.GET,
                 requestEntity,
                 Response.class)).thenReturn(re);
-        Boolean result = basicServiceImpl.checkStationExists("stationName", headers);
+        Boolean result = basicServiceImpl.checkStationExists("stationName");
         Assert.assertTrue(result);
     }
 
@@ -112,7 +112,7 @@ public class BasicServiceImplTest {
                 HttpMethod.GET,
                 requestEntity,
                 Response.class)).thenReturn(re);
-        TrainType result = basicServiceImpl.queryTrainType("trainTypeId", headers);
+        TrainType result = basicServiceImpl.queryTrainType("trainTypeId");
         Assert.assertNull(result);
     }
 

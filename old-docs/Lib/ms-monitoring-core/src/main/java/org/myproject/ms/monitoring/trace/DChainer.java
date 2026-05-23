@@ -25,8 +25,6 @@ public class DChainer implements Chainer {
 
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
-	private static final int MAX_CHARS_IN_SPAN_NAME = 50;
-
 	private final Sampler defaultSampler;
 
 	private final Random random;

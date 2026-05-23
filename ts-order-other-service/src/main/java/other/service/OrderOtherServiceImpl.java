@@ -188,7 +188,7 @@ public class OrderOtherServiceImpl implements OrderOtherService {
             stationIds.add(order.getFrom());
             stationIds.add(order.getTo());
         }
-        List<String> names = queryForStationId(stationIds, headers);
+        List<String> names = queryForStationId(stationIds);
         for (int i = 0; i < orders.size(); i++) {
             orders.get(i).setFrom(names.get(i * 2));
             orders.get(i).setTo(names.get(i * 2 + 1));
@@ -196,7 +196,7 @@ public class OrderOtherServiceImpl implements OrderOtherService {
         return new Response<>(1, success, orders);
     }
 
-    public List<String> queryForStationId(List<String> ids, HttpHeaders headers) {
+    public List<String> queryForStationId(List<String> ids) {
 
         HttpEntity requestEntity = new HttpEntity(ids, null);
         ResponseEntity<Response<List<String>>> re = restTemplate.exchange(

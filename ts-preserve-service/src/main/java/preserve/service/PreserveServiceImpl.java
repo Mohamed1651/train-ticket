@@ -253,7 +253,7 @@ public class PreserveServiceImpl implements PreserveService {
         return reTicket.getBody().getData();
     }
 
-    public boolean sendEmail(NotifyInfo notifyInfo, HttpHeaders httpHeaders) {
+    public boolean sendEmail(NotifyInfo notifyInfo) {
         PreserveServiceImpl.LOGGER.info("[Preserve Service][Send Email] send email to mq");
 
         try {

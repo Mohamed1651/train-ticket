@@ -34,8 +34,8 @@ public class BasicServiceImpl implements BasicService {
         result.setStatus(true);
         response.setStatus(1);
         response.setMsg("Success");
-        boolean startingPlaceExist = checkStationExists(info.getStartingPlace(), headers);
-        boolean endPlaceExist = checkStationExists(info.getEndPlace(), headers);
+        boolean startingPlaceExist = checkStationExists(info.getStartingPlace());
+        boolean endPlaceExist = checkStationExists(info.getEndPlace());
         if (!startingPlaceExist || !endPlaceExist) {
             result.setStatus(false);
             response.setStatus(0);
@@ -46,7 +46,7 @@ public class BasicServiceImpl implements BasicService {
                 BasicServiceImpl.LOGGER.warn("End place {} not exist", info.getEndPlace());
         }
 
-        TrainType trainType = queryTrainType(info.getTrip().getTrainTypeId(), headers);
+        TrainType trainType = queryTrainType(info.getTrip().getTrainTypeId());
         if (trainType == null) {
             BasicServiceImpl.LOGGER.warn("traintype doesn't exist, trainTypeId: {}", info.getTrip().getTrainTypeId());
             result.setStatus(false);
@@ -61,8 +61,8 @@ public class BasicServiceImpl implements BasicService {
         if (trainType != null){
             trainTypeString = trainType.getId();
         }
-        Route route = getRouteByRouteId(routeId, headers);
-        PriceConfig priceConfig = queryPriceConfigByRouteIdAndTrainType(routeId, trainTypeString, headers);
+        Route route = getRouteByRouteId(routeId);
+        PriceConfig priceConfig = queryPriceConfigByRouteIdAndTrainType(routeId, trainTypeString);
 
         String startingPlaceId = (String) queryForStationId(info.getStartingPlace(), headers).getData();
         String endPlaceId = (String) queryForStationId(info.getEndPlace(), headers).getData();
@@ -122,7 +122,7 @@ public class BasicServiceImpl implements BasicService {
         return  re.getBody();
     }
 
-    public boolean checkStationExists(String stationName, HttpHeaders headers) {
+    public boolean checkStationExists(String stationName) {
         BasicServiceImpl.LOGGER.info("[Check Station Exists] stationName: {}", stationName);
         HttpEntity requestEntity = new HttpEntity(null);
         ResponseEntity<Response> re = restTemplate.exchange(
@@ -135,7 +135,7 @@ public class BasicServiceImpl implements BasicService {
         return exist.getStatus() == 1;
     }
 
-    public TrainType queryTrainType(String trainTypeId, HttpHeaders headers) {
+    public TrainType queryTrainType(String trainTypeId) {
         BasicServiceImpl.LOGGER.info("[Query Train Type] Train Type: {}", trainTypeId);
         HttpEntity requestEntity = new HttpEntity(null);
         ResponseEntity<Response> re = restTemplate.exchange(
@@ -148,7 +148,7 @@ public class BasicServiceImpl implements BasicService {
         return JsonUtils.conveterObject(response.getData(), TrainType.class);
     }
 
-    private Route getRouteByRouteId(String routeId, HttpHeaders headers) {
+    private Route getRouteByRouteId(String routeId) {
         BasicServiceImpl.LOGGER.info("[Get Route By Id] Route ID：{}", routeId);
         HttpEntity requestEntity = new HttpEntity(null);
         ResponseEntity<Response> re = restTemplate.exchange(
@@ -166,7 +166,7 @@ public class BasicServiceImpl implements BasicService {
         }
     }
 
-    private PriceConfig queryPriceConfigByRouteIdAndTrainType(String routeId, String trainType, HttpHeaders headers) {
+    private PriceConfig queryPriceConfigByRouteIdAndTrainType(String routeId, String trainType) {
         BasicServiceImpl.LOGGER.info("[Query For Price Config] RouteId: {} ,TrainType: {}", routeId, trainType);
         HttpEntity requestEntity = new HttpEntity(null, null);
         ResponseEntity<Response> re = restTemplate.exchange(

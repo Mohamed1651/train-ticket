@@ -8,21 +8,15 @@ import java.util.HashMap;
 public class Clock {
 
     private String type;
-    private String host;
-    private String src;
     private String traceId;
     private String spanId;
-    private String parentId;
 
     private HashMap<String,Integer> clock;
 
-    public Clock(String type, String host, String src, String traceId, String spanId, String parentId, HashMap<String,Integer> clock) {
+    public Clock(String type, String traceId, String spanId, HashMap<String,Integer> clock) {
         this.type = type;
-        this.host = host;
-        this.src = src;
         this.traceId = traceId;
         this.spanId = spanId;
-        this.parentId = parentId;
         this.clock = clock;
     }
 

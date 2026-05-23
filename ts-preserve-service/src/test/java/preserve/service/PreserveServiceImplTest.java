@@ -161,7 +161,7 @@ public class PreserveServiceImplTest {
                 HttpMethod.POST,
                 requestEntitySendEmail,
                 Boolean.class)).thenReturn(reSendEmail);
-        boolean result = preserveServiceImpl.sendEmail(notifyInfo, headers);
+        boolean result = preserveServiceImpl.sendEmail(notifyInfo);
         Assert.assertTrue(result);
     }
 

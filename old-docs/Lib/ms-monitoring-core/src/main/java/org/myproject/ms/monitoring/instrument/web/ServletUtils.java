@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletResponse;
 
 class ServletUtils {
 
+	private ServletUtils(){}
 	static String getHeader(HttpServletRequest request, HttpServletResponse response,
 			String name) {
 		String value = request.getHeader(name);

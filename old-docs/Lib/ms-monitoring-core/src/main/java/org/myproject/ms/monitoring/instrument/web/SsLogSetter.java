@@ -11,6 +11,8 @@ import org.myproject.ms.monitoring.Item;
 
 class SsLogSetter {
 
+	private SsLogSetter(){}
+
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	static void annotateWithServerSendIfLogIsNotAlreadyPresent(Item span) {

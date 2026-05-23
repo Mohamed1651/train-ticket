@@ -29,7 +29,7 @@ public class OrderServiceImpl implements OrderService {
     private RestTemplate restTemplate;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderServiceImpl.class);
-
+    private static final String SUCCESS_MESSAGE = "Success.";
     String success = "Success";
     String orderNotFound = "Order Not Found";
 
@@ -172,7 +172,7 @@ public class OrderServiceImpl implements OrderService {
             stationIds.add(order.getTo());
         }
 
-        List<String> names = queryForStationId(stationIds, headers);
+        List<String> names = queryForStationId(stationIds);
         for (int i = 0; i < orders.size(); i++) {
             orders.get(i).setFrom(names.get(i * 2));
             orders.get(i).setTo(names.get(i * 2 + 1));
@@ -180,7 +180,7 @@ public class OrderServiceImpl implements OrderService {
         return new Response<>(1, "Query Orders For Refresh Success", orders);
     }
 
-    public List<String> queryForStationId(List<String> ids, HttpHeaders headers) {
+    public List<String> queryForStationId(List<String> ids) {
 
         HttpEntity requestEntity = new HttpEntity(ids, null);
         ResponseEntity<Response<List<String>>> re = restTemplate.exchange(
@@ -217,7 +217,7 @@ public class OrderServiceImpl implements OrderService {
             oldOrder.setContactsDocumentNumber(order.getContactsDocumentNumber());
             oldOrder.setDocumentType(order.getDocumentType());
             orderRepository.save(oldOrder);
-            OrderServiceImpl.LOGGER.info("Success.");
+            OrderServiceImpl.LOGGER.info(SUCCESS_MESSAGE);
             return new Response<>(1, success, oldOrder);
         }
     }
@@ -276,7 +276,7 @@ public class OrderServiceImpl implements OrderService {
     public Response getAllOrders(HttpHeaders headers) {
         ArrayList<Order> orders = orderRepository.findAll();
         if (orders != null && !orders.isEmpty()) {
-            return new Response<>(1, "Success.", orders);
+            return new Response<>(1, SUCCESS_MESSAGE, orders);
         } else {
             OrderServiceImpl.LOGGER.warn("Find all orders warn: {}","No content");
             return new Response<>(0, "No Content.", null);
@@ -328,7 +328,7 @@ public class OrderServiceImpl implements OrderService {
             OrderServiceImpl.LOGGER.error("Order not found, OrderId: {}",orderId);
             return new Response<>(0, orderNotFound, null);
         } else {
-            return new Response<>(1, "Success.", order);
+            return new Response<>(1, SUCCESS_MESSAGE, order);
         }
     }
 

@@ -35,8 +35,8 @@ public class RoutePlanServiceImpl implements RoutePlanService {
         queryInfo.setEndPlace(info.getToStationName());
         queryInfo.setDepartureTime(info.getTravelDate());
 
-        ArrayList<TripResponse> highSpeed = getTripFromHighSpeedTravelServive(queryInfo, headers);
-        ArrayList<TripResponse> normalTrain = getTripFromNormalTrainTravelService(queryInfo, headers);
+        ArrayList<TripResponse> highSpeed = getTripFromHighSpeedTravelServive(queryInfo);
+        ArrayList<TripResponse> normalTrain = getTripFromNormalTrainTravelService(queryInfo);
 
         //2.Sort by second-class seats
         ArrayList<TripResponse> finalResult = new ArrayList<>();
@@ -71,7 +71,7 @@ public class RoutePlanServiceImpl implements RoutePlanService {
             tempUnit.setTrainTypeId(tempResponse.getTrainTypeId());
             tempUnit.setFromStationName(tempResponse.getStartingStation());
             tempUnit.setToStationName(tempResponse.getTerminalStation());
-            tempUnit.setStopStations(getStationList(tempResponse.getTripId().toString(), headers));
+            tempUnit.setStopStations(getStationList(tempResponse.getTripId().toString()));
             tempUnit.setPriceForSecondClassSeat(tempResponse.getPriceForEconomyClass());
             tempUnit.setPriceForFirstClassSeat(tempResponse.getPriceForConfortClass());
             tempUnit.setEndTime(tempResponse.getEndTime());
@@ -92,8 +92,8 @@ public class RoutePlanServiceImpl implements RoutePlanService {
         queryInfo.setEndPlace(info.getToStationName());
         queryInfo.setDepartureTime(info.getTravelDate());
 
-        ArrayList<TripResponse> highSpeed = getTripFromHighSpeedTravelServive(queryInfo, headers);
-        ArrayList<TripResponse> normalTrain = getTripFromNormalTrainTravelService(queryInfo, headers);
+        ArrayList<TripResponse> highSpeed = getTripFromHighSpeedTravelServive(queryInfo);
+        ArrayList<TripResponse> normalTrain = getTripFromNormalTrainTravelService(queryInfo);
 
         //2.Sort by time
         ArrayList<TripResponse> finalResult = new ArrayList<>();
@@ -135,7 +135,7 @@ public class RoutePlanServiceImpl implements RoutePlanService {
             tempUnit.setFromStationName(tempResponse.getStartingStation());
             tempUnit.setToStationName(tempResponse.getTerminalStation());
 
-            tempUnit.setStopStations(getStationList(tempResponse.getTripId().toString(), headers));
+            tempUnit.setStopStations(getStationList(tempResponse.getTripId().toString()));
 
             tempUnit.setPriceForSecondClassSeat(tempResponse.getPriceForEconomyClass());
             tempUnit.setPriceForFirstClassSeat(tempResponse.getPriceForConfortClass());
@@ -148,42 +148,30 @@ public class RoutePlanServiceImpl implements RoutePlanService {
 
     @Override
     public Response searchMinStopStations(RoutePlanInfo info, HttpHeaders headers) {
-        String fromStationId = queryForStationId(info.getFormStationName(), headers);
-        String toStationId = queryForStationId(info.getToStationName(), headers);
-        RoutePlanServiceImpl.LOGGER.info("From Id: {} To: {}", fromStationId, toStationId);
+        String fromStationId = queryForStationId(info.getFormStationName());
+        String toStationId = queryForStationId(info.getToStationName());
+        RoutePlanServiceImpl.LOGGER.info("From Id: {} To: {}", fromStationId , toStationId);
+        //1.Get the route through the two stations
 
-        // 1. Get the route through the two stations
-        HttpEntity<Void> requestEntity = new HttpEntity<>(null);
+        HttpEntity requestEntity = new HttpEntity(null);
         ResponseEntity<Response<ArrayList<Route>>> re = restTemplate.exchange(
                 "http://ts-route-service:11178/api/v1/routeservice/routes/" + fromStationId + "/" + toStationId,
                 HttpMethod.GET,
                 requestEntity,
-                new ParameterizedTypeReference<Response<ArrayList<Route>>>() {});
+                new ParameterizedTypeReference<Response<ArrayList<Route>>>() {
+                });
+
+
         ArrayList<Route> routeList = re.getBody().getData();
         RoutePlanServiceImpl.LOGGER.info("Candidate Route Number: {}", routeList.size());
-
-        // 2 & 3. Select routes with the fewest stops
-        ArrayList<String> resultRoutes = selectTopRoutesWithFewestStops(routeList, fromStationId, toStationId);
-
-        // 4. Get and merge train information from travel services
-        ArrayList<ArrayList<Trip>> finalTripResult = fetchAndMergeTrips(resultRoutes);
-        RoutePlanServiceImpl.LOGGER.info("Trips Num: {}", finalTripResult.size());
-
-        // 5. Get the price and station details according to train info
-        ArrayList<RoutePlanResultUnit> tripResponses = buildRoutePlanResultUnits(finalTripResult, info, headers);
-        RoutePlanServiceImpl.LOGGER.info("Trips Response Unit Num: {}", tripResponses.size());
-
-        return new Response<>(1, "Success.", tripResponses);
-    }
-
-    private ArrayList<String> selectTopRoutesWithFewestStops(ArrayList<Route> routeList, String fromStationId, String toStationId) {
+        //2.Calculate how many stops there are between the two stations
         ArrayList<Integer> gapList = new ArrayList<>();
-        for (Route route : routeList) {
-            int indexStart = route.getStations().indexOf(fromStationId);
-            int indexEnd = route.getStations().indexOf(toStationId);
+        for (int i = 0; i < routeList.size(); i++) {
+            int indexStart = routeList.get(i).getStations().indexOf(fromStationId);
+            int indexEnd = routeList.get(i).getStations().indexOf(toStationId);
             gapList.add(indexEnd - indexStart);
         }
-
+        //3.Pick the routes with the fewest stops
         ArrayList<String> resultRoutes = new ArrayList<>();
         int size = Math.min(5, routeList.size());
         for (int i = 0; i < size; i++) {
@@ -199,60 +187,66 @@ public class RoutePlanServiceImpl implements RoutePlanService {
             routeList.remove(minIndex);
             gapList.remove(minIndex);
         }
-        return resultRoutes;
-    }
-
-    private ArrayList<ArrayList<Trip>> fetchAndMergeTrips(ArrayList<String> resultRoutes) {
-        HttpEntity<ArrayList<String>> requestEntity = new HttpEntity<>(resultRoutes, null);
+        //4.Depending on the route, go to travel-service or travel2service to get the train information
+        requestEntity = new HttpEntity(resultRoutes, null);
         ResponseEntity<Response<ArrayList<ArrayList<Trip>>>> re2 = restTemplate.exchange(
                 "http://ts-travel-service:12346/api/v1/travelservice/trips/routes",
                 HttpMethod.POST,
                 requestEntity,
-                new ParameterizedTypeReference<Response<ArrayList<ArrayList<Trip>>>>() {});
+                new ParameterizedTypeReference<Response<ArrayList<ArrayList<Trip>>>>() {
+                });
+
         ArrayList<ArrayList<Trip>> travelTrips = re2.getBody().getData();
+
 
         re2 = restTemplate.exchange(
                 "http://ts-travel2-service:16346/api/v1/travel2service/trips/routes",
                 HttpMethod.POST,
                 requestEntity,
-                new ParameterizedTypeReference<Response<ArrayList<ArrayList<Trip>>>>() {});
+                new ParameterizedTypeReference<Response<ArrayList<ArrayList<Trip>>>>() {
+                });
         ArrayList<ArrayList<Trip>> travel2Trips = re2.getBody().getData();
 
+        //Merge query results
         ArrayList<ArrayList<Trip>> finalTripResult = new ArrayList<>();
         for (int i = 0; i < travel2Trips.size(); i++) {
             ArrayList<Trip> tempList = travel2Trips.get(i);
             tempList.addAll(travelTrips.get(i));
             finalTripResult.add(tempList);
         }
-        return finalTripResult;
-    }
-
-    private ArrayList<RoutePlanResultUnit> buildRoutePlanResultUnits(ArrayList<ArrayList<Trip>> finalTripResult, RoutePlanInfo info, HttpHeaders headers) {
+        RoutePlanServiceImpl.LOGGER.info("Trips Num: {}", finalTripResult.size());
+        //5.Then, get the price and the station information according to the train information
         ArrayList<Trip> trips = new ArrayList<>();
         for (ArrayList<Trip> tempTrips : finalTripResult) {
             trips.addAll(tempTrips);
         }
-
         ArrayList<RoutePlanResultUnit> tripResponses = new ArrayList<>();
+
+        ResponseEntity<Response<TripAllDetail>> re3;
         for (Trip trip : trips) {
+            TripResponse tripResponse;
             TripAllDetailInfo allDetailInfo = new TripAllDetailInfo();
             allDetailInfo.setTripId(trip.getTripId().toString());
             allDetailInfo.setTravelDate(info.getTravelDate());
             allDetailInfo.setFrom(info.getFormStationName());
             allDetailInfo.setTo(info.getToStationName());
-
-            HttpEntity<TripAllDetailInfo> requestEntity = new HttpEntity<>(allDetailInfo, null);
-            String requestUrl = (trip.getTripId().toString().charAt(0) == 'D' || trip.getTripId().toString().charAt(0) == 'G')
-                    ? "http://ts-travel-service:12346/api/v1/travelservice/trip_detail"
-                    : "http://ts-travel2-service:16346/api/v1/travel2service/trip_detail";
-
-            ResponseEntity<Response<TripAllDetail>> re3 = restTemplate.exchange(
+            requestEntity = new HttpEntity(allDetailInfo, null);
+            String requestUrl = "";
+            if (trip.getTripId().toString().charAt(0) == 'D' || trip.getTripId().toString().charAt(0) == 'G') {
+                requestUrl = "http://ts-travel-service:12346/api/v1/travelservice/trip_detail";
+            } else {
+                requestUrl = "http://ts-travel2-service:16346/api/v1/travel2service/trip_detail";
+            }
+            re3 = restTemplate.exchange(
                     requestUrl,
                     HttpMethod.POST,
                     requestEntity,
-                    new ParameterizedTypeReference<Response<TripAllDetail>>() {});
+                    new ParameterizedTypeReference<Response<TripAllDetail>>() {
+                    });
 
-            TripResponse tripResponse = re3.getBody().getData().getTripResponse();
+            TripAllDetail tripAllDetail = re3.getBody().getData();
+            tripResponse = tripAllDetail.getTripResponse();
+
 
             RoutePlanResultUnit unit = new RoutePlanResultUnit();
             unit.setTripId(trip.getTripId().toString());
@@ -263,17 +257,20 @@ public class RoutePlanServiceImpl implements RoutePlanService {
             unit.setEndTime(tripResponse.getEndTime());
             unit.setPriceForFirstClassSeat(tripResponse.getPriceForConfortClass());
             unit.setPriceForSecondClassSeat(tripResponse.getPriceForEconomyClass());
-
-            Route tripRoute = getRouteByRouteId(trip.getRouteId(), headers);
+            //Go get the roadmap according to routeid
+            String routeId = trip.getRouteId();
+            Route tripRoute = getRouteByRouteId(routeId);
             if (tripRoute != null) {
                 unit.setStopStations(tripRoute.getStations());
             }
+
             tripResponses.add(unit);
         }
-        return tripResponses;
+        RoutePlanServiceImpl.LOGGER.info("Trips Response Unit Num: {}", tripResponses.size());
+        return new Response<>(1, "Success.", tripResponses);
     }
 
-    private String queryForStationId(String stationName, HttpHeaders headers) {
+    private String queryForStationId(String stationName) {
         RoutePlanServiceImpl.LOGGER.info("[Get Station Name]");
 
         HttpEntity requestEntity = new HttpEntity(null);
@@ -286,7 +283,7 @@ public class RoutePlanServiceImpl implements RoutePlanService {
         return re.getBody().getData();
     }
 
-    private Route getRouteByRouteId(String routeId, HttpHeaders headers) {
+    private Route getRouteByRouteId(String routeId) {
         RoutePlanServiceImpl.LOGGER.info("[Get Route By Id] Route ID：{}", routeId);
         HttpEntity requestEntity = new HttpEntity(null);
         ResponseEntity<Response<Route>> re = restTemplate.exchange(
@@ -306,7 +303,7 @@ public class RoutePlanServiceImpl implements RoutePlanService {
         }
     }
 
-    private ArrayList<TripResponse> getTripFromHighSpeedTravelServive(TripInfo info, HttpHeaders headers) {
+    private ArrayList<TripResponse> getTripFromHighSpeedTravelServive(TripInfo info) {
         HttpEntity requestEntity = new HttpEntity(info, null);
 
         ResponseEntity<Response<ArrayList<TripResponse>>> re = restTemplate.exchange(
@@ -321,7 +318,7 @@ public class RoutePlanServiceImpl implements RoutePlanService {
         return tripResponses;
     }
 
-    private ArrayList<TripResponse> getTripFromNormalTrainTravelService(TripInfo info, HttpHeaders headers) {
+    private ArrayList<TripResponse> getTripFromNormalTrainTravelService(TripInfo info) {
         HttpEntity requestEntity = new HttpEntity(info, null);
 
         ResponseEntity<Response<ArrayList<TripResponse>>> re = restTemplate.exchange(
@@ -335,7 +332,7 @@ public class RoutePlanServiceImpl implements RoutePlanService {
         return list;
     }
 
-    private List<String> getStationList(String tripId, HttpHeaders headers) {
+    private List<String> getStationList(String tripId) {
 
         String path;
         if (tripId.charAt(0) == 'G' || tripId.charAt(0) == 'D') {
