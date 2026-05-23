@@ -1040,27 +1040,18 @@ public class TraceTranslator {
 
     public static String readFile(String path) {
         File file = new File(path);
-        BufferedReader reader = null;
-        String laststr = "";
-        try {
-            reader = new BufferedReader(new FileReader(file));
-            String tempString = null;
+        StringBuilder sb = new StringBuilder();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String tempString;
             while ((tempString = reader.readLine()) != null) {
-                laststr = laststr + tempString;
-//                System.out.println("reading");
+                sb.append(tempString);
             }
-            reader.close();
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e1) {
-                }
-            }
         }
-        return laststr;
+
+        return sb.toString();
     }
 
     public static boolean write(String path, List<HashMap<String, String>> logs) {
