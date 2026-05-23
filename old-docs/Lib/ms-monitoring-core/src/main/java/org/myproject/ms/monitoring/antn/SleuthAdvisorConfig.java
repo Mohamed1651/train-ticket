@@ -143,6 +143,11 @@ class SleuthAdvisorConfig  extends AbstractPointcutAdvisor implements
 			return ObjectUtils.nullSafeEquals(this.methodResolver, otherAdvisor.methodResolver);
 		}
 
+		@Override
+		public int hashCode() {
+			return ObjectUtils.nullSafeHashCode(this.methodResolver);
+		}
+
 	}
 
 	private final class AnnotationClassOrMethodFilter extends AnnotationClassFilter {
