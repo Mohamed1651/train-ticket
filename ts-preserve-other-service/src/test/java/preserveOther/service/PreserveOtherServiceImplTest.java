@@ -165,7 +165,7 @@ public class PreserveOtherServiceImplTest {
                 HttpMethod.POST,
                 requestEntitySendEmail,
                 Boolean.class)).thenReturn(reSendEmail);
-        boolean result = preserveOtherServiceImpl.sendEmail(notifyInfo, headers);
+        boolean result = preserveOtherServiceImpl.sendEmail(notifyInfo);
         Assert.assertTrue(result);
     }
 

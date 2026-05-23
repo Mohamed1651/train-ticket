@@ -265,7 +265,7 @@ public class PreserveOtherServiceImpl implements PreserveOtherService {
         return reTicket.getBody().getData();
     }
 
-    public boolean sendEmail(NotifyInfo notifyInfo, HttpHeaders httpHeaders) {
+    public boolean sendEmail(NotifyInfo notifyInfo) {
         PreserveOtherServiceImpl.LOGGER.info("[Preserve Other Service][Send Email] send email to mq");
 
         try {

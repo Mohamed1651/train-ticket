@@ -197,7 +197,7 @@ public class OrderOtherServiceImpl implements OrderOtherService {
         return new Response<>(1, success, orders);
     }
 
-    public List<String> queryForStationId(List<String> ids, HttpHeaders headers) {
+    public List<String> queryForStationId(List<String> ids) {
 
         HttpEntity requestEntity = new HttpEntity(ids, null);
         ResponseEntity<Response<List<String>>> re = restTemplate.exchange(

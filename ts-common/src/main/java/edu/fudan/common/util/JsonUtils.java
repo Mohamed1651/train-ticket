@@ -37,8 +37,7 @@ public class JsonUtils {
 
     public static Map object2Map(Object obj) {
         String object2Json = object2Json(obj);
-        Map<?, ?> result = jsonToMap(object2Json);
-        return result;
+        return jsonToMap(object2Json);
     }
 
     /**

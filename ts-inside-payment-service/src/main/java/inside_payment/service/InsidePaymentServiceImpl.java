@@ -199,7 +199,7 @@ public class InsidePaymentServiceImpl implements InsidePaymentService {
         return new Response<>(1, "Success", result);
     }
 
-    public String queryAccount(String userId, HttpHeaders headers) {
+    public String queryAccount(String userId) {
         List<Payment> payments = paymentRepository.findByUserId(userId);
         List<Money> addMonies = addMoneyRepository.findByUserId(userId);
         Iterator<Payment> paymentsIterator = payments.iterator();

@@ -173,7 +173,7 @@ public class OrderServiceImpl implements OrderService {
             stationIds.add(order.getTo());
         }
 
-        List<String> names = queryForStationId(stationIds, headers);
+        List<String> names = queryForStationId(stationIds);
         for (int i = 0; i < orders.size(); i++) {
             orders.get(i).setFrom(names.get(i * 2));
             orders.get(i).setTo(names.get(i * 2 + 1));
@@ -181,7 +181,7 @@ public class OrderServiceImpl implements OrderService {
         return new Response<>(1, "Query Orders For Refresh Success", orders);
     }
 
-    public List<String> queryForStationId(List<String> ids, HttpHeaders headers) {
+    public List<String> queryForStationId(List<String> ids) {
 
         HttpEntity requestEntity = new HttpEntity(ids, null);
         ResponseEntity<Response<List<String>>> re = restTemplate.exchange(
