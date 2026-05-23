@@ -185,8 +185,6 @@ public class TraceTranslator {
                                 String c = anno.getString("value");
                                 content.put("class", c);
                                 JSONObject endpoint = anno.getJSONObject("endpoint");
-                                String ipv4 = endpoint.getString("ipv4");
-                                String port = String.valueOf(endpoint.get("port"));
                                 String serviceName = String.valueOf(endpoint.get("serviceName"));
 
                                 String hostId = serviceName;
@@ -198,8 +196,6 @@ public class TraceTranslator {
                                 String method = anno.getString("value");
                                 content.put("method", method);
                                 JSONObject endpoint = anno.getJSONObject("endpoint");
-                                String ipv4 = endpoint.getString("ipv4");
-                                String port = String.valueOf(endpoint.get("port"));
                                 String serviceName = String.valueOf(endpoint.get("serviceName"));
 
                                 String hostId = serviceName;
@@ -527,7 +523,6 @@ public class TraceTranslator {
 //            Long time2 = Long.valueOf(log2.get("timestamp"));
 //            return time1.compareTo(time2);
 //        }).collect(Collectors.toList());
-        List<HashMap<String, String>> list = null;
 
         HashMap<String, String> log = logs.get(0);
         String traceId = log.get("traceId");
@@ -560,7 +555,6 @@ public class TraceTranslator {
         //add the event for cs & cr
         HashMap<String, String> apis = new HashMap<String, String>();
         logs.forEach(n -> {
-            String api = n.get("api");
             apis.put(n.get("spanId"), n.get("api"));
         });
         logs.forEach(n -> {
@@ -578,7 +572,6 @@ public class TraceTranslator {
 
         List<HashMap<String, String>> forwardLogs = new ArrayList<HashMap<String, String>>();
         List<HashMap<String, String>> backwardLogs = new ArrayList<HashMap<String, String>>();
-        List<Span> sortedSpan = new ArrayList<Span>();
 
         Span entrance = spans.get(traceId);
 
