@@ -201,7 +201,7 @@ public class TravelServiceImpl implements TravelService {
 
         @Override
         public TripResponse call() throws Exception {
-            TravelServiceImpl.LOGGER.info("tripId: [{}], routeId: [{}]. Start to query", tempTrip.getTripId().toString(), tempTrip.getRouteId());
+            TravelServiceImpl.LOGGER.info("tripId: [{}], routeId: [{}]. Start to query", tempTrip.getTripId(), tempTrip.getRouteId());
 
             String startingPlaceName = info.getStartingPlace();
             String endPlaceName = info.getEndPlace();
@@ -214,9 +214,9 @@ public class TravelServiceImpl implements TravelService {
                 response = getTickets(tempTrip, tempRoute, startingPlaceId, endPlaceId, startingPlaceName, endPlaceName, info.getDepartureTime(), headers);
             }
             if (response == null) {
-                TravelServiceImpl.LOGGER.warn("tripId: [{}], routeId: [{}]. Query trip error. Tickets not found,start: {},end: {},time: {}", tempTrip.getTripId().toString(), tempTrip.getRouteId(), startingPlaceName, endPlaceName, info.getDepartureTime());
+                TravelServiceImpl.LOGGER.warn("tripId: [{}], routeId: [{}]. Query trip error. Tickets not found,start: {},end: {},time: {}", tempTrip.getTripId(), tempTrip.getRouteId(), startingPlaceName, endPlaceName, info.getDepartureTime());
             } else {
-                TravelServiceImpl.LOGGER.info("tripId: [{}], routeId: [{}]. Query success", tempTrip.getTripId().toString(), tempTrip.getRouteId());
+                TravelServiceImpl.LOGGER.info("tripId: [{}], routeId: [{}]. Query success", tempTrip.getTripId(), tempTrip.getRouteId());
             }
             return response;
         }

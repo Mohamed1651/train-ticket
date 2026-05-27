@@ -49,7 +49,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public User createDefaultAuthUser(AuthDto dto) {
-        LOGGER.info("Register User Info is:  " + dto.getUserName());
+        LOGGER.info("Register User Info is: {} " , dto.getUserName());
         User user = User.builder()
                 .userId(UUID.fromString(dto.getUserId()))
                 .username(dto.getUserName())

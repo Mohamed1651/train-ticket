@@ -129,7 +129,7 @@ public class PreserveOtherServiceImpl implements PreserveOtherService {
         TravelResult resultForTravel = re.getBody().getData();
 
         order.setSeatClass(oti.getSeatType());
-        PreserveOtherServiceImpl.LOGGER.info("[Order] Order Travel Date: {}", oti.getDate().toString());
+        PreserveOtherServiceImpl.LOGGER.info("[Order] Order Travel Date: {}", oti.getDate());
         order.setTravelDate(oti.getDate());
         order.setTravelTime(gtdr.getTripResponse().getStartingTime());
 

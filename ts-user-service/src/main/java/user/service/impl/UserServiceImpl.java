@@ -33,7 +33,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Response saveUser(UserDto userDto, HttpHeaders headers) {
-        LOGGER.info("Save User Name id：" + userDto.getUserName());
+        LOGGER.info("Save User Name id：{}", userDto.getUserName());
         UUID userId = userDto.getUserId();
         if (userDto.getUserId() == null) {
             userId = UUID.randomUUID();

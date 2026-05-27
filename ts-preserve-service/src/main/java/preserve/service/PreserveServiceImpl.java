@@ -71,7 +71,7 @@ public class PreserveServiceImpl implements PreserveService {
             return new Response<>(0, response.getMsg(), null);
         } else {
             TripResponse tripResponse = gtdr.getTripResponse();
-            LOGGER.info("TripResponse:" + tripResponse);
+            LOGGER.info("TripResponse:{}", tripResponse);
             if (oti.getSeatType() == SeatClass.FIRSTCLASS.getCode()) {
                 if (tripResponse.getConfortClass() == 0) {
                     PreserveServiceImpl.LOGGER.warn("[Check seat is enough], TripId: {}",oti.getTripId());
@@ -122,7 +122,7 @@ public class PreserveServiceImpl implements PreserveService {
         TravelResult resultForTravel = re.getBody().getData();
 
         order.setSeatClass(oti.getSeatType());
-        PreserveServiceImpl.LOGGER.info("[Order] Order Travel Date: {}", oti.getDate().toString());
+        PreserveServiceImpl.LOGGER.info("[Order] Order Travel Date: {}", oti.getDate());
         order.setTravelDate(oti.getDate());
         order.setTravelTime(gtdr.getTripResponse().getStartingTime());
 
@@ -208,7 +208,7 @@ public class PreserveServiceImpl implements PreserveService {
             consignRequest.setPhone(oti.getConsigneePhone());
             consignRequest.setWeight(oti.getConsigneeWeight());
             consignRequest.setWithin(oti.isWithin());
-            LOGGER.info("CONSIGN INFO : " +consignRequest);
+            LOGGER.info("CONSIGN INFO : {} ",consignRequest);
             Response icresult = createConsign(consignRequest, headers);
             if (icresult.getStatus() == 1) {
                 PreserveServiceImpl.LOGGER.info("[Step 7] Consign Success");

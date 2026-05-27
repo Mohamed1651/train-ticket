@@ -34,7 +34,7 @@ public class OrderController {
 
     @PostMapping(value = "/order/tickets")
     public HttpEntity getTicketListByDateAndTripId(@RequestBody Seat seatRequest, @RequestHeader HttpHeaders headers) {
-        OrderController.LOGGER.info("[Get Sold Ticket] Date: {}", seatRequest.getTravelDate().toString());
+        OrderController.LOGGER.info("[Get Sold Ticket] Date: {}", seatRequest.getTravelDate());
         return ok(orderService.getSoldTickets(seatRequest, headers));
     }
 

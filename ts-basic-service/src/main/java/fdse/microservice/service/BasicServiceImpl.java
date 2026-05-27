@@ -78,7 +78,7 @@ public class BasicServiceImpl implements BasicService {
 
         LOGGER.info("indexStart: {} __ indexEnd: {}", indexStart, indexEnd);
         if (route != null){
-            LOGGER.info("route.getDistances().size: " + route.getDistances().size());
+            LOGGER.info("route.getDistances().size: {}", route.getDistances().size());
         }
         HashMap<String, String> prices = new HashMap<>();
         try {

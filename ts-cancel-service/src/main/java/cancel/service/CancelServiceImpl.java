@@ -188,7 +188,7 @@ public class CancelServiceImpl implements CancelService {
         if (order.getStatus() == OrderStatus.NOTPAID.getCode()) {
             return "0.00";
         }
-        CancelServiceImpl.LOGGER.info("[Cancel Order] Order Travel Date: {}", order.getTravelDate().toString());
+        CancelServiceImpl.LOGGER.info("[Cancel Order] Order Travel Date: {}", order.getTravelDate());
         Date nowDate = new Date();
         Calendar cal = Calendar.getInstance();
         cal.setTime(order.getTravelDate());

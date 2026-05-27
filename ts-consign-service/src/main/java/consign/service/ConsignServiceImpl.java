@@ -38,7 +38,7 @@ public class ConsignServiceImpl implements ConsignService {
         ConsignRecord consignRecord = new ConsignRecord();
         //Set the record attribute
         consignRecord.setId(UUID.randomUUID());
-        LOGGER.info("Order ID is :" + consignRequest.getOrderId());
+        LOGGER.info("Order ID is :{}" , consignRequest.getOrderId());
         consignRecord.setOrderId(consignRequest.getOrderId());
         consignRecord.setAccountId(consignRequest.getAccountId());
         ConsignServiceImpl.LOGGER.info("The handle date is {}", consignRequest.getHandleDate());
