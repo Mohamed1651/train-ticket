@@ -32,90 +32,100 @@ public class CancelServiceImpl implements CancelService {
 
     @Override
     public Response cancelOrder(String orderId, String loginId, HttpHeaders headers) {
-        // Try retrieving from the primary order service
+
         Response<Order> orderResult = getOrderByIdFromOrder(orderId, headers);
         if (orderResult.getStatus() == 1) {
             CancelServiceImpl.LOGGER.info("[Cancel Order] Order found G|H");
-            return processOrderCancellation(orderResult.getData(), loginId, true, headers);
+            Order order =  orderResult.getData();
+            if (order.getStatus() == OrderStatus.NOTPAID.getCode()
+                    || order.getStatus() == OrderStatus.PAID.getCode() || order.getStatus() == OrderStatus.CHANGE.getCode()) {
+
+                // order.setStatus(OrderStatus.CANCEL.getCode());
+
+                Response changeOrderResult = cancelFromOrder(order, headers);
+                // 0 -- not find order   1 - cancel success
+                if (changeOrderResult.getStatus() == 1) {
+
+                    CancelServiceImpl.LOGGER.info("[Cancel Order] Success.");
+                    //Draw back money
+                    String money = calculateRefund(order);
+                    boolean status = drawbackMoney(money, loginId, headers);
+                    if (status) {
+                        CancelServiceImpl.LOGGER.info("[Draw Back Money] Success.");
+
+
+
+                        Response<User> result = getAccount(order.getAccountId().toString(), headers);
+                        if (result.getStatus() == 0) {
+                            return new Response<>(0, "Cann't find userinfo by user id.", null);
+                        }
+                        NotifyInfo notifyInfo = new NotifyInfo();
+                        notifyInfo.setDate(new Date().toString());
+                        notifyInfo.setEmail(result.getData().getEmail());
+                        notifyInfo.setStartingPlace(order.getFrom());
+                        notifyInfo.setEndPlace(order.getTo());
+                        notifyInfo.setUsername(result.getData().getUserName());
+                        notifyInfo.setSeatNumber(order.getSeatNumber());
+                        notifyInfo.setOrderNumber(order.getId().toString());
+                        notifyInfo.setPrice(order.getPrice());
+                        notifyInfo.setSeatClass(SeatClass.getNameByCode(order.getSeatClass()));
+                        notifyInfo.setStartingTime(order.getTravelTime().toString());
+
+                        // TODO: change to async message serivce
+                        // sendEmail(notifyInfo, headers);
+
+                    } else {
+                        CancelServiceImpl.LOGGER.error("[Draw Back Money] Fail, loginId: {}, orderId: {}", loginId, orderId);
+                    }
+                    return new Response<>(1, "Success.", "test not null");
+                } else {
+                    CancelServiceImpl.LOGGER.error("[Cancel Order] Fail, orderId: {}, Reason: {}", orderId, changeOrderResult.getMsg());
+                    return new Response<>(0, changeOrderResult.getMsg(), null);
+                }
+
+            } else {
+                CancelServiceImpl.LOGGER.info("[Cancel Order] Order Status Not Permitted, loginId: {}, orderId: {}", loginId, orderId);
+                return new Response<>(0, orderStatusCancelNotPermitted, null);
+            }
+        } else {
+
+            Response<Order> orderOtherResult = getOrderByIdFromOrderOther(orderId, headers);
+            if (orderOtherResult.getStatus() == 1) {
+                CancelServiceImpl.LOGGER.info("[Cancel Order] Order found Z|K|Other");
+
+                Order order =   orderOtherResult.getData();
+                if (order.getStatus() == OrderStatus.NOTPAID.getCode()
+                        || order.getStatus() == OrderStatus.PAID.getCode() || order.getStatus() == OrderStatus.CHANGE.getCode()) {
+
+                    CancelServiceImpl.LOGGER.info("[Cancel Order] Order status ok");
+
+//                    order.setStatus(OrderStatus.CANCEL.getCode());
+                    Response changeOrderResult = cancelFromOtherOrder(order, headers);
+
+                    if (changeOrderResult.getStatus() == 1) {
+                        CancelServiceImpl.LOGGER.info("[Cancel Order] Success.");
+                        //Draw back money
+                        String money = calculateRefund(order);
+                        boolean status = drawbackMoney(money, loginId, headers);
+                        if (status) {
+                            CancelServiceImpl.LOGGER.info("[Draw Back Money] Success.");
+                        } else {
+                            CancelServiceImpl.LOGGER.error("[Draw Back Money] Fail, loginId: {}, orderId: {}", loginId, orderId);
+                        }
+                        return new Response<>(1, "Success.", null);
+                    } else {
+                        CancelServiceImpl.LOGGER.error("[Cancel Order] Fail, orderId: {}, Reason: {}", orderId, changeOrderResult.getMsg());
+                        return new Response<>(0, "Fail.Reason:" + changeOrderResult.getMsg(), null);
+                    }
+                } else {
+                    CancelServiceImpl.LOGGER.warn("[Cancel Order] Order Status Not Permitted, loginId: {}, orderId: {}", loginId, orderId);
+                    return new Response<>(0, orderStatusCancelNotPermitted, null);
+                }
+            } else {
+                CancelServiceImpl.LOGGER.warn("[Cancel Order] Order Not Found, loginId: {}, orderId: {}", loginId, orderId);
+                return new Response<>(0, "Order Not Found.", null);
+            }
         }
-
-        // Fallback to the alternative order service
-        Response<Order> orderOtherResult = getOrderByIdFromOrderOther(orderId, headers);
-        if (orderOtherResult.getStatus() == 1) {
-            CancelServiceImpl.LOGGER.info("[Cancel Order] Order found Z|K|Other");
-            return processOrderCancellation(orderOtherResult.getData(), loginId, false, headers);
-        }
-
-        CancelServiceImpl.LOGGER.warn("[Cancel Order] Order Not Found, loginId: {}, orderId: {}", loginId, orderId);
-        return new Response<>(0, "Order Not Found.", null);
-    }
-
-    private Response processOrderCancellation(Order order, String loginId, boolean isPrimaryOrder, HttpHeaders headers) {
-        if (!isStatusPermitted(order.getStatus())) {
-            CancelServiceImpl.LOGGER.info("[Cancel Order] Order Status Not Permitted, loginId: {}, orderId: {}", loginId, order.getId());
-            return new Response<>(0, orderStatusCancelNotPermitted, null);
-        }
-
-        Response changeOrderResult = isPrimaryOrder
-                ? cancelFromOrder(order, headers)
-                : cancelFromOtherOrder(order, headers);
-
-        if (changeOrderResult.getStatus() != 1) {
-            CancelServiceImpl.LOGGER.error("[Cancel Order] Fail, orderId: {}, Reason: {}", order.getId(), changeOrderResult.getMsg());
-            String msg = isPrimaryOrder ? changeOrderResult.getMsg() : "Fail.Reason:" + changeOrderResult.getMsg();
-            return new Response<>(0, msg, null);
-        }
-
-        CancelServiceImpl.LOGGER.info("[Cancel Order] Success.");
-        handleRefundAndNotification(order, loginId, isPrimaryOrder, headers);
-
-        String testBody = isPrimaryOrder ? "test not null" : null;
-        return new Response<>(1, "Success.", testBody);
-    }
-
-    private boolean isStatusPermitted(int status) {
-        return status == OrderStatus.NOTPAID.getCode()
-                || status == OrderStatus.PAID.getCode()
-                || status == OrderStatus.CHANGE.getCode();
-    }
-
-    private void handleRefundAndNotification(Order order, String loginId, boolean sendNotify, HttpHeaders headers) {
-        String money = calculateRefund(order);
-        boolean refundStatus = drawbackMoney(money, loginId, headers);
-
-        if (!refundStatus) {
-            CancelServiceImpl.LOGGER.error("[Draw Back Money] Fail, loginId: {}, orderId: {}", loginId, order.getId());
-            return;
-        }
-
-        CancelServiceImpl.LOGGER.info("[Draw Back Money] Success.");
-
-        if (sendNotify) {
-            sendCancellationNotification(order, headers);
-        }
-    }
-
-    private void sendCancellationNotification(Order order, HttpHeaders headers) {
-        Response<User> result = getAccount(order.getAccountId().toString(), headers);
-        if (result.getStatus() == 0) {
-            CancelServiceImpl.LOGGER.error("[Cancel Order] Cann't find userinfo by user id: {}", order.getAccountId());
-            return;
-        }
-
-        NotifyInfo notifyInfo = new NotifyInfo();
-        notifyInfo.setDate(new Date().toString());
-        notifyInfo.setEmail(result.getData().getEmail());
-        notifyInfo.setStartingPlace(order.getFrom());
-        notifyInfo.setEndPlace(order.getTo());
-        notifyInfo.setUsername(result.getData().getUserName());
-        notifyInfo.setSeatNumber(order.getSeatNumber());
-        notifyInfo.setOrderNumber(order.getId().toString());
-        notifyInfo.setPrice(order.getPrice());
-        notifyInfo.setSeatClass(SeatClass.getNameByCode(order.getSeatClass()));
-        notifyInfo.setStartingTime(order.getTravelTime().toString());
-
-        // TODO: change to async message service
-        // sendEmail(notifyInfo, headers);
     }
 
     public boolean sendEmail(NotifyInfo notifyInfo, HttpHeaders headers) {

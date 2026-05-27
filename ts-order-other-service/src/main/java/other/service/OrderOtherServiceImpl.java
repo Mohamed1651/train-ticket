@@ -122,62 +122,63 @@ public class OrderOtherServiceImpl implements OrderOtherService {
 
     @Override
     public Response<ArrayList<Order>> queryOrders(QueryInfo qi, String accountId, HttpHeaders headers) {
-        // 1. Get all orders of the user
+        //1.Get all orders of the user
         ArrayList<Order> list = orderOtherRepository.findByAccountId(UUID.fromString(accountId));
         OrderOtherServiceImpl.LOGGER.info("[Query Order][Step 1] Get Orders Number of Account: {}", list.size());
-
-        // 2. Check if these orders fit the requirement
-        if (!qi.isEnableStateQuery() && !qi.isEnableBoughtDateQuery() && !qi.isEnableTravelDateQuery()) {
+        //2.Check is these orders fit the requirement/
+        if (qi.isEnableStateQuery() || qi.isEnableBoughtDateQuery() || qi.isEnableTravelDateQuery()) {
+            ArrayList<Order> finalList = new ArrayList<>();
+            for (Order tempOrder : list) {
+                boolean statePassFlag = false;
+                boolean boughtDatePassFlag = false;
+                boolean travelDatePassFlag = false;
+                //3.Check order state requirement.
+                if (qi.isEnableStateQuery()) {
+                    if (tempOrder.getStatus() != qi.getState()) {
+                        statePassFlag = false;
+                    } else {
+                        statePassFlag = true;
+                    }
+                } else {
+                    statePassFlag = true;
+                }
+                OrderOtherServiceImpl.LOGGER.info("[Query Order][Step 2][Check Status Fits End]");
+                //4.Check order travel date requirement.
+                if (qi.isEnableTravelDateQuery()) {
+                    if (tempOrder.getTravelDate().before(qi.getTravelDateEnd()) &&
+                            tempOrder.getTravelDate().after(qi.getBoughtDateStart())) {
+                        travelDatePassFlag = true;
+                    } else {
+                        travelDatePassFlag = false;
+                    }
+                } else {
+                    travelDatePassFlag = true;
+                }
+                OrderOtherServiceImpl.LOGGER.info("[Query Order][Step 2][Check Travel Date End]");
+                //5.Check order bought date requirement.
+                if (qi.isEnableBoughtDateQuery()) {
+                    if (tempOrder.getBoughtDate().before(qi.getBoughtDateEnd()) &&
+                            tempOrder.getBoughtDate().after(qi.getBoughtDateStart())) {
+                        boughtDatePassFlag = true;
+                    } else {
+                        boughtDatePassFlag = false;
+                    }
+                } else {
+                    boughtDatePassFlag = true;
+                }
+                OrderOtherServiceImpl.LOGGER.info("[Query Order][Step 2][Check Bought Date End]");
+                //6.check if all requirement fits.
+                if (statePassFlag && boughtDatePassFlag && travelDatePassFlag) {
+                    finalList.add(tempOrder);
+                }
+                OrderOtherServiceImpl.LOGGER.info("[Query Order][Step 2][Check All Requirement End]");
+            }
+            OrderOtherServiceImpl.LOGGER.info("[Query Order] Get order num: {}", finalList.size());
+            return new Response<>(1, "Get order num", finalList);
+        } else {
             OrderOtherServiceImpl.LOGGER.warn("[Query Order] Orders don't fit the requirement, loginId: {}", qi.getLoginId());
             return new Response<>(1, "Get order num", list);
         }
-
-        ArrayList<Order> finalList = new ArrayList<>();
-        for (Order tempOrder : list) {
-            if (isOrderMatchingRequirements(tempOrder, qi)) {
-                finalList.add(tempOrder);
-            }
-            OrderOtherServiceImpl.LOGGER.info("[Query Order][Step 2][Check All Requirement End]");
-        }
-
-        OrderOtherServiceImpl.LOGGER.info("[Query Order] Get order num: {}", finalList.size());
-        return new Response<>(1, "Get order num", finalList);
-    }
-
-    private boolean isOrderMatchingRequirements(Order tempOrder, QueryInfo qi) {
-        boolean statePassFlag = checkStateRequirement(tempOrder, qi);
-        OrderOtherServiceImpl.LOGGER.info("[Query Order][Step 2][Check Status Fits End]");
-
-        boolean travelDatePassFlag = checkTravelDateRequirement(tempOrder, qi);
-        OrderOtherServiceImpl.LOGGER.info("[Query Order][Step 2][Check Travel Date End]");
-
-        boolean boughtDatePassFlag = checkBoughtDateRequirement(tempOrder, qi);
-        OrderOtherServiceImpl.LOGGER.info("[Query Order][Step 2][Check Bought Date End]");
-
-        return statePassFlag && boughtDatePassFlag && travelDatePassFlag;
-    }
-
-    private boolean checkStateRequirement(Order tempOrder, QueryInfo qi) {
-        if (qi.isEnableStateQuery()) {
-            return tempOrder.getStatus() == qi.getState();
-        }
-        return true;
-    }
-
-    private boolean checkTravelDateRequirement(Order tempOrder, QueryInfo qi) {
-        if (qi.isEnableTravelDateQuery()) {
-            return tempOrder.getTravelDate().before(qi.getTravelDateEnd()) &&
-                    tempOrder.getTravelDate().after(qi.getBoughtDateStart());
-        }
-        return true;
-    }
-
-    private boolean checkBoughtDateRequirement(Order tempOrder, QueryInfo qi) {
-        if (qi.isEnableBoughtDateQuery()) {
-            return tempOrder.getBoughtDate().before(qi.getBoughtDateEnd()) &&
-                    tempOrder.getBoughtDate().after(qi.getBoughtDateStart());
-        }
-        return true;
     }
 
     @Override
