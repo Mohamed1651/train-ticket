@@ -171,25 +171,20 @@ public class CallAnalysis {
 
 	public static String readFile(String path) {
 		File file = new File(path);
-		BufferedReader reader = null;
-		String laststr = "";
-		try {
-			reader = new BufferedReader(new FileReader(file));
-			String tempString = null;
+		StringBuilder content = new StringBuilder();
+
+		// Try-with-resources automatically closes the reader, even if an exception occurs
+		try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+			String tempString;
 			while ((tempString = reader.readLine()) != null) {
-				laststr = laststr + tempString;
+				content.append(tempString);
+				// Optional: content.append(System.lineSeparator());
+				// Add the line above if you want to preserve original line breaks!
 			}
-			reader.close();
 		} catch (IOException e) {
 			e.printStackTrace();
-		} finally {
-			if (reader != null) {
-				try {
-					reader.close();
-				} catch (IOException e1) {
-				}
-			}
 		}
-		return laststr;
+
+		return content.toString();
 	}
 }

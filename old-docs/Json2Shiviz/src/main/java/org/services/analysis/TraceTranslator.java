@@ -1047,27 +1047,23 @@ public class TraceTranslator {
 
     public static String readFile(String path) {
         File file = new File(path);
-        BufferedReader reader = null;
-        String laststr = "";
-        try {
-            reader = new BufferedReader(new FileReader(file));
-            String tempString = null;
+        StringBuilder content = new StringBuilder();
+
+        // Try-with-resources automatically closes the reader when done
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String tempString;
             while ((tempString = reader.readLine()) != null) {
-                laststr = laststr + tempString;
-//                System.out.println("reading");
+                content.append(tempString);
+
+                // NOTE: readLine() strips line breaks.
+                // If you want to keep them, uncomment the line below:
+                // content.append(System.lineSeparator());
             }
-            reader.close();
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e1) {
-                }
-            }
         }
-        return laststr;
+
+        return content.toString();
     }
 
     public static boolean write(String path, List<HashMap<String, String>> logs) {
