@@ -123,10 +123,12 @@ services:
     build: ts-order-service
     #image: codewisdom/ts-order-service:0.2.0
     restart: always
-    ports:
-      - 12031:12031
+    expose:
+      - 12031
     networks:
       - my-network
+    environment:
+      - JAVA_OPTS=-Xms1g -Xmx2g -XX:+UseG1GC
 
   ts-order-mongo:
     image: mongo:4.4
@@ -193,8 +195,8 @@ services:
     build: ts-travel-service
     #image: codewisdom/ts-travel-service:0.2.0
     restart: always
-    ports:
-      - 12346:12346
+    expose:
+      - 12346
     networks:
       - my-network
 
@@ -204,13 +206,13 @@ services:
       - my-network
 
   ts-travel2-service:
-      build: ts-travel2-service
-      #image: codewisdom/ts-travel2-service:0.2.0
-      restart: always
-      ports:
-        - 16428:16346
-      networks:
-        - my-network
+    build: ts-travel2-service
+    #image: codewisdom/ts-travel2-service:0.2.0
+    restart: always
+    ports:
+      - 16428:16346
+    networks:
+      - my-network
 
   ts-travel2-mongo:
     image: mongo:4.4
@@ -236,31 +238,31 @@ services:
       - my-network
 
   ts-basic-service:
-      build: ts-basic-service
-      #image: codewisdom/ts-basic-service:0.2.0
-      restart: always
-      ports:
-        - 15680:15680
-      networks:
-          - my-network
+    build: ts-basic-service
+    #image: codewisdom/ts-basic-service:0.2.0
+    restart: always
+    ports:
+      - 15680:15680
+    networks:
+      - my-network
 
   ts-ticketinfo-service:
-        build: ts-ticketinfo-service
-        #image: codewisdom/ts-ticketinfo-service:0.2.0
-        restart: always
-        ports:
-          - 15681:15681
-        networks:
-          - my-network
+    build: ts-ticketinfo-service
+    #image: codewisdom/ts-ticketinfo-service:0.2.0
+    restart: always
+    ports:
+      - 15681:15681
+    networks:
+      - my-network
 
   ts-price-service:
-        build: ts-price-service
-        #image: codewisdom/ts-price-service:0.2.0
-        restart: always
-        ports:
-          - 16579:16579
-        networks:
-          - my-network
+    build: ts-price-service
+    #image: codewisdom/ts-price-service:0.2.0
+    restart: always
+    ports:
+      - 16579:16579
+    networks:
+      - my-network
 
 
   ts-price-mongo:
@@ -269,22 +271,22 @@ services:
       - my-network
 
   ts-notification-service:
-        build: ts-notification-service
-        #image: codewisdom/ts-notification-service:0.2.0
-        restart: always
-        ports:
-          - 17853:17853
-        networks:
-          - my-network
+    build: ts-notification-service
+    #image: codewisdom/ts-notification-service:0.2.0
+    restart: always
+    ports:
+      - 17853:17853
+    networks:
+      - my-network
 
   ts-security-service:
-        build: ts-security-service
-        #image: codewisdom/ts-security-service:0.2.0
-        restart: always
-        ports:
-          - 11188:11188
-        networks:
-          - my-network
+    build: ts-security-service
+    #image: codewisdom/ts-security-service:0.2.0
+    restart: always
+    ports:
+      - 11188:11188
+    networks:
+      - my-network
 
   ts-security-mongo:
     image: mongo:4.4
@@ -292,13 +294,13 @@ services:
       - my-network
 
   ts-inside-payment-service:
-        build: ts-inside-payment-service
-        #image: codewisdom/ts-inside-payment-service:0.2.0
-        restart: always
-        ports:
-          - 18673:18673
-        networks:
-          - my-network
+    build: ts-inside-payment-service
+    #image: codewisdom/ts-inside-payment-service:0.2.0
+    restart: always
+    ports:
+      - 18673:18673
+    networks:
+      - my-network
 
   ts-inside-payment-mongo:
     image: mongo:4.4
@@ -306,22 +308,22 @@ services:
       - my-network
 
   ts-execute-service:
-        build: ts-execute-service
-        #image: codewisdom/ts-execute-service:0.2.0
-        restart: always
-        ports:
-          - 12386:12386
-        networks:
-          - my-network
+    build: ts-execute-service
+    #image: codewisdom/ts-execute-service:0.2.0
+    restart: always
+    ports:
+      - 12386:12386
+    networks:
+      - my-network
 
   ts-payment-service:
-        build: ts-payment-service
-        #image: codewisdom/ts-payment-service:0.2.0
-        restart: always
-        ports:
-          - 19001:19001
-        networks:
-          - my-network
+    build: ts-payment-service
+    #image: codewisdom/ts-payment-service:0.2.0
+    restart: always
+    ports:
+      - 19001:19001
+    networks:
+      - my-network
 
   ts-payment-mongo:
     image: mongo:4.4
@@ -329,13 +331,13 @@ services:
       - my-network
 
   ts-rebook-service:
-        build: ts-rebook-service
-        #image: codewisdom/ts-rebook-service:0.2.0
-        restart: always
-        ports:
-          - 18886:18886
-        networks:
-          - my-network
+    build: ts-rebook-service
+    #image: codewisdom/ts-rebook-service:0.2.0
+    restart: always
+    ports:
+      - 18886:18886
+    networks:
+      - my-network
 
   ts-rebook-mongo:
     image: mongo:4.4
@@ -343,22 +345,22 @@ services:
       - my-network
 
   ts-cancel-service:
-        build: ts-cancel-service
-        #image: codewisdom/ts-cancel-service:0.2.0
-        restart: always
-        ports:
-          - 18885:18885
-        networks:
-          - my-network
+    build: ts-cancel-service
+    #image: codewisdom/ts-cancel-service:0.2.0
+    restart: always
+    ports:
+      - 18885:18885
+    networks:
+      - my-network
 
   ts-assurance-service:
-        build: ts-assurance-service
-        #image: codewisdom/ts-assurance-service:0.2.0
-        restart: always
-        ports:
-          - 18888:18888
-        networks:
-          - my-network
+    build: ts-assurance-service
+    #image: codewisdom/ts-assurance-service:0.2.0
+    restart: always
+    ports:
+      - 18888:18888
+    networks:
+      - my-network
 
   ts-assurance-mongo:
     image: mongo:4.4
@@ -366,31 +368,31 @@ services:
       - my-network
 
   ts-seat-service:
-        build: ts-seat-service
-        #image: codewisdom/ts-seat-service:0.2.0
-        restart: always
-        ports:
-          - 18898:18898
-        networks:
-          - my-network
+    build: ts-seat-service
+    #image: codewisdom/ts-seat-service:0.2.0
+    restart: always
+    ports:
+      - 18898:18898
+    networks:
+      - my-network
 
   ts-travel-plan-service:
-        build: ts-travel-plan-service
-        #image: codewisdom/ts-travel-plan-service:0.2.0
-        restart: always
-        ports:
-          - 14322:14322
-        networks:
-          - my-network
+    build: ts-travel-plan-service
+    #image: codewisdom/ts-travel-plan-service:0.2.0
+    restart: always
+    ports:
+      - 14322:14322
+    networks:
+      - my-network
 
   ts-ticket-office-service:
-        build: ts-ticket-office-service
-        #image: codewisdom/ts-ticket-office-service:0.2.0
-        restart: always
-        ports:
-          - 16108:16108
-        networks:
-          - my-network
+    build: ts-ticket-office-service
+    #image: codewisdom/ts-ticket-office-service:0.2.0
+    restart: always
+    ports:
+      - 16108:16108
+    networks:
+      - my-network
 
   ts-ticket-office-mongo:
     image: mongo:4.4
@@ -423,26 +425,26 @@ services:
       - my-network
 
   ts-voucher-service:
-          build: ts-voucher-service
-          #image: codewisdom/ts-voucher-service:0.2.0
-          restart: always
-          ports:
-            - 16101:16101
-          depends_on:
-            - ts-voucher-mysql
-          volumes:
-            - /var/lib/mysql
-          networks:
-            - my-network
+    build: ts-voucher-service
+    #image: codewisdom/ts-voucher-service:0.2.0
+    restart: always
+    ports:
+      - 16101:16101
+    depends_on:
+      - ts-voucher-mysql
+    volumes:
+      - /var/lib/mysql
+    networks:
+      - my-network
 
   ts-food-map-service:
-        build: ts-food-map-service
-        #image: codewisdom/ts-food-map-service:0.2.0
-        restart: always
-        ports:
-          - 18855:18855
-        networks:
-          - my-network
+    build: ts-food-map-service
+    #image: codewisdom/ts-food-map-service:0.2.0
+    restart: always
+    ports:
+      - 18855:18855
+    networks:
+      - my-network
 
   ts-food-map-mongo:
     image: mongo:4.4
@@ -450,31 +452,31 @@ services:
       - my-network
 
   ts-route-plan-service:
-          build: ts-route-plan-service
-          #image: codewisdom/ts-route-plan-service:0.2.0
-          restart: always
-          ports:
-            - 14578:14578
-          networks:
-            - my-network
+    build: ts-route-plan-service
+    #image: codewisdom/ts-route-plan-service:0.2.0
+    restart: always
+    ports:
+      - 14578:14578
+    networks:
+      - my-network
 
   ts-food-service:
-      build: ts-food-service
-      #image: codewisdom/ts-food-service:0.2.0
-      restart: always
-      ports:
-        - 18856:18856
-      networks:
-        - my-network
+    build: ts-food-service
+    #image: codewisdom/ts-food-service:0.2.0
+    restart: always
+    ports:
+      - 18856:18856
+    networks:
+      - my-network
 
   ts-consign-service:
-            build: ts-consign-service
-            #image: codewisdom/ts-consign-service:0.2.0
-            restart: always
-            ports:
-              - 16111:16111
-            networks:
-              - my-network
+    build: ts-consign-service
+    #image: codewisdom/ts-consign-service:0.2.0
+    restart: always
+    ports:
+      - 16111:16111
+    networks:
+      - my-network
 
   ts-consign-mongo:
     image: mongo:4.4
@@ -482,13 +484,13 @@ services:
       - my-network
 
   ts-consign-price-service:
-            build: ts-consign-price-service
-            #image: codewisdom/ts-consign-price-service:0.2.0
-            restart: always
-            ports:
-              - 16110:16110
-            networks:
-              - my-network
+    build: ts-consign-price-service
+    #image: codewisdom/ts-consign-price-service:0.2.0
+    restart: always
+    ports:
+      - 16110:16110
+    networks:
+      - my-network
 
   ts-consign-price-mongo:
     image: mongo:4.4
@@ -501,48 +503,48 @@ services:
       - my-network
 
   ts-admin-basic-info-service:
-        build: ts-admin-basic-info-service
-        #image: codewisdom/ts-admin-basic-info-service:0.2.0
-        restart: always
-        ports:
-          - 18767:18767
-        networks:
-          - my-network
+    build: ts-admin-basic-info-service
+    #image: codewisdom/ts-admin-basic-info-service:0.2.0
+    restart: always
+    ports:
+      - 18767:18767
+    networks:
+      - my-network
 
   ts-admin-order-service:
-            build: ts-admin-order-service
-            #image: codewisdom/ts-admin-order-service:0.2.0
-            restart: always
-            ports:
-              - 16112:16112
-            networks:
-              - my-network
+    build: ts-admin-order-service
+    #image: codewisdom/ts-admin-order-service:0.2.0
+    restart: always
+    ports:
+      - 16112:16112
+    networks:
+      - my-network
 
   ts-admin-route-service:
-              build: ts-admin-route-service
-              #image: codewisdom/ts-admin-route-service:0.2.0
-              restart: always
-              ports:
-                - 16113:16113
-              deploy:
-                replicas: 1
-                restart_policy:
-                  condition: on-failure
-              networks:
-                - my-network
+    build: ts-admin-route-service
+    #image: codewisdom/ts-admin-route-service:0.2.0
+    restart: always
+    ports:
+      - 16113:16113
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - my-network
 
   ts-admin-travel-service:
-                build: ts-admin-travel-service
-                #image: codewisdom/ts-admin-travel-service:0.2.0
-                restart: always
-                ports:
-                  - 16114:16114
-                deploy:
-                  replicas: 1
-                  restart_policy:
-                    condition: on-failure
-                networks:
-                  - my-network
+    build: ts-admin-travel-service
+    #image: codewisdom/ts-admin-travel-service:0.2.0
+    restart: always
+    ports:
+      - 16114:16114
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - my-network
 
   ts-admin-user-service:
     build: ts-admin-user-service
